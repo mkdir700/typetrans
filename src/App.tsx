@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import Translator from "./Translator";
+import PermissionCheck from "./PermissionCheck";
 import "./App.css";
 
 function App() {
@@ -9,18 +10,32 @@ function App() {
   useEffect(() => {
     // Get current window label to determine which component to render
     const currentWindow = getCurrentWebviewWindow();
+    console.log("Current window label:", currentWindow.label);
     setWindowLabel(currentWindow.label);
   }, []);
 
+  console.log("Rendering App with windowLabel:", windowLabel);
+
   // Render different components based on window label
   if (windowLabel === "translator") {
+    console.log("Rendering Translator component");
     return <Translator />;
   }
 
+  // Show loading state while determining window label
+  if (windowLabel === "") {
+    return <div>Loading...</div>;
+  }
+
   // Main window - can be used for settings or hidden
+  console.log("Rendering main window");
   return (
     <div className="main-container">
       <h1>TypeTrans - 边写边译</h1>
+
+      {/* macOS Permission Check */}
+      <PermissionCheck />
+
       <div className="info-section">
         <h2>使用说明</h2>
         <ul>

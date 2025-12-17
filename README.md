@@ -47,6 +47,7 @@ TypeTrans 是一个基于 Tauri v2、React 和 TypeScript 构建的跨平台桌�
 - [Node.js](https://nodejs.org/) 18+ 或 [Bun](https://bun.sh/)
 - [Rust](https://www.rust-lang.org/) 1.70+
 - [DeepL API Key](https://www.deepl.com/pro-api) (免费或付费版本)
+- **macOS 用户**: 需要授予辅助功能权限(应用会自动引导)
 
 ### 安装步骤
 
@@ -87,6 +88,8 @@ bun run tauri dev
 # 或使用 npm
 npm run tauri dev
 ```
+
+> 💡 **macOS 用户提示**: 首次运行时,应用会检查辅助功能权限。如果未授予,请点击应用中的"请求辅助功能权限"按钮,或查看 [macOS 权限配置指南](MACOS_PERMISSIONS.md)。
 
 5. **构建生产版本**
 

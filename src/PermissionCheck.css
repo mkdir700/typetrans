@@ -1,0 +1,130 @@
+.permission-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.permission-warning {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  color: #333;
+}
+
+.permission-warning h3 {
+  margin: 0 0 16px 0;
+  color: #f59e0b;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.permission-warning p {
+  margin: 12px 0;
+  line-height: 1.6;
+  color: #555;
+}
+
+.permission-warning ul {
+  margin: 12px 0;
+  padding-left: 24px;
+  line-height: 1.8;
+  color: #555;
+}
+
+.permission-warning ul li {
+  margin: 8px 0;
+}
+
+.permission-actions {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.request-button,
+.refresh-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.request-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  flex: 1;
+  min-width: 200px;
+}
+
+.request-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.request-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-button {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.refresh-button:hover {
+  background: #e5e7eb;
+}
+
+.permission-note {
+  margin-top: 16px;
+  padding: 12px;
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #92400e;
+}
+
+.permission-note code {
+  background: #fde68a;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "Monaco", "Courier New", monospace;
+  font-size: 0.85rem;
+}
+
+.permission-status {
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  margin: 16px 0;
+}
+
+.permission-status.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.permission-status.checking {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.status-icon {
+  font-size: 1.25rem;
+}
+

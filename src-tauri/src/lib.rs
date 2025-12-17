@@ -1,8 +1,9 @@
 use arboard::Clipboard;
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
+use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
 // Translation response structure
 #[derive(Debug, Serialize, Deserialize)]
@@ -48,30 +49,73 @@ async fn get_translation(text: String, target_lang: String) -> Result<String, St
 // Get selected text from clipboard
 #[tauri::command]
 async fn get_selected_text() -> Result<String, String> {
+    println!("get_selected_text called");
+
     // Simulate Ctrl+C to copy selected text
-    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
+    println!("Creating Enigo instance...");
+    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| {
+        eprintln!("Failed to create Enigo: {}", e);
+        e.to_string()
+    })?;
+    println!("Enigo instance created");
 
     // Press Ctrl+C (or Cmd+C on macOS)
     #[cfg(target_os = "macos")]
     {
-        enigo.key(Key::Meta, Direction::Press).map_err(|e| e.to_string())?;
-        enigo.key(Key::Unicode('c'), Direction::Click).map_err(|e| e.to_string())?;
-        enigo.key(Key::Meta, Direction::Release).map_err(|e| e.to_string())?;
+        println!("Simulating Cmd+C on macOS...");
+        enigo.key(Key::Meta, Direction::Press).map_err(|e| {
+            eprintln!("Failed to press Meta key: {}", e);
+            e.to_string()
+        })?;
+        println!("Meta key pressed");
+
+        enigo.key(Key::Unicode('c'), Direction::Click).map_err(|e| {
+            eprintln!("Failed to click 'c' key: {}", e);
+            e.to_string()
+        })?;
+        println!("'c' key clicked");
+
+        enigo.key(Key::Meta, Direction::Release).map_err(|e| {
+            eprintln!("Failed to release Meta key: {}", e);
+            e.to_string()
+        })?;
+        println!("Meta key released");
     }
 
     #[cfg(not(target_os = "macos"))]
     {
-        enigo.key(Key::Control, Direction::Press).map_err(|e| e.to_string())?;
-        enigo.key(Key::Unicode('c'), Direction::Click).map_err(|e| e.to_string())?;
-        enigo.key(Key::Control, Direction::Release).map_err(|e| e.to_string())?;
+        println!("Simulating Ctrl+C...");
+        enigo.key(Key::Control, Direction::Press).map_err(|e| {
+            eprintln!("Failed to press Control key: {}", e);
+            e.to_string()
+        })?;
+        enigo.key(Key::Unicode('c'), Direction::Click).map_err(|e| {
+            eprintln!("Failed to click 'c' key: {}", e);
+            e.to_string()
+        })?;
+        enigo.key(Key::Control, Direction::Release).map_err(|e| {
+            eprintln!("Failed to release Control key: {}", e);
+            e.to_string()
+        })?;
     }
 
     // Wait for clipboard to update
+    println!("Waiting for clipboard to update...");
     std::thread::sleep(std::time::Duration::from_millis(100));
 
     // Read from clipboard
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-    clipboard.get_text().map_err(|e| e.to_string())
+    println!("Reading from clipboard...");
+    let mut clipboard = Clipboard::new().map_err(|e| {
+        eprintln!("Failed to create clipboard: {}", e);
+        e.to_string()
+    })?;
+    let text = clipboard.get_text().map_err(|e| {
+        eprintln!("Failed to get text from clipboard: {}", e);
+        e.to_string()
+    })?;
+
+    println!("Got text from clipboard: {}", text);
+    Ok(text)
 }
 
 // Copy text to clipboard
@@ -111,22 +155,46 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_macos_permissions::init())
         .setup(|app| {
             let handle = app.handle().clone();
+
+            // 为 translator 窗口应用 macOS 原生模糊效果
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("translator") {
+                apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, Some(16.0))
+                    .expect("Failed to apply vibrancy");
+            }
 
             // Register global shortcut Alt+T
             let shortcut = "Alt+T";
 
-            app.global_shortcut()
+            match app.global_shortcut()
                 .on_shortcut(shortcut, move |_app, _event, _shortcut| {
                     println!("Global shortcut '{}' triggered", shortcut);
 
-                    // Emit event to trigger translation workflow
-                    handle.emit("global-shortcut-triggered", ()).unwrap();
-                })
-                .unwrap();
-
-            app.global_shortcut().register(shortcut).unwrap();
+                    // Get translator window and emit event to it
+                    if let Some(window) = handle.get_webview_window("translator") {
+                        if let Err(e) = window.emit("global-shortcut-triggered", ()) {
+                            eprintln!("Failed to emit event to translator window: {}", e);
+                        } else {
+                            println!("Event emitted to translator window");
+                        }
+                    } else {
+                        eprintln!("Translator window not found");
+                    }
+                }) {
+                Ok(_) => {
+                    if let Err(e) = app.global_shortcut().register(shortcut) {
+                        eprintln!("Failed to register global shortcut '{}': {}. Make sure the app has accessibility permissions.", shortcut, e);
+                    } else {
+                        println!("Global shortcut '{}' registered successfully", shortcut);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Failed to set up global shortcut handler '{}': {}. Make sure the app has accessibility permissions.", shortcut, e);
+                }
+            }
 
             Ok(())
         })

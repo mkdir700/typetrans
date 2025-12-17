@@ -10,6 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "label": "main",
@@ -21,15 +22,16 @@
       {
         "label": "translator",
         "title": "Translator",
-        "visible": false,
+        "visible": true,
         "decorations": false,
         "transparent": true,
+        "shadow": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "fullscreen": false,
-        "resizable": false,
-        "width": 400,
-        "height": 300,
+        "resizable": true,
+        "width": 600,
+        "height": 250,
         "center": true
       }
     ],
@@ -46,6 +48,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "entitlements": "Entitlements.plist"
+    }
   }
 }
