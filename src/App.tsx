@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { useTranslation } from "react-i18next";
 import Translator from "./Translator";
 import PermissionCheck from "./PermissionCheck";
 import SettingsPage from "./SettingsPage";
 import "./App.css";
 
 function App() {
+  const { t } = useTranslation();
   const [windowLabel, setWindowLabel] = useState<string>("");
 
   useEffect(() => {
@@ -37,32 +39,29 @@ function App() {
   console.log("Rendering main window");
   return (
     <div className="main-container">
-      <h1>TypeTrans - 边写边译</h1>
+      <h1>{t("dashboard.title")}</h1>
 
       {/* macOS Permission Check */}
       <PermissionCheck />
 
       <div className="info-section">
-        <h2>使用说明</h2>
+        <h2>{t("dashboard.instructions.title")}</h2>
         <ul>
-          <li>选中任意文本</li>
-          <li>
-            按下 <kbd>Alt + T</kbd> 快捷键
-          </li>
-          <li>在弹出的窗口中查看翻译结果</li>
-          <li>点击 "Copy Translation" 复制译文</li>
+          <li>{t("dashboard.instructions.step1")}</li>
+          <li>{t("dashboard.instructions.step2")}</li>
+          <li>{t("dashboard.instructions.step3")}</li>
+          <li>{t("dashboard.instructions.step4")}</li>
         </ul>
 
-        <h2>支持的语言</h2>
+        <h2>{t("dashboard.languages.title")}</h2>
         <ul>
-          <li>中文 (ZH)</li>
-          <li>英文 (EN)</li>
-          <li>日文 (JA)</li>
+          <li>{t("dashboard.languages.zh")}</li>
+          <li>{t("dashboard.languages.en")}</li>
+          <li>{t("dashboard.languages.ja")}</li>
         </ul>
 
         <div className="note">
-          <strong>注意:</strong> 请在设置中配置 <code>智谱 AI API Key</code>{" "}
-          以使用翻译功能。
+          <strong>{t("dashboard.note.title")}</strong> {t("dashboard.note.body")}
         </div>
       </div>
     </div>

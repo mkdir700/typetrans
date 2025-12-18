@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useTranslation } from "react-i18next";
 import { Check, Eye, EyeOff, KeyRound, X } from "lucide-react";
 
 type AppSettings = {
@@ -18,6 +19,7 @@ function normalizeError(error: unknown): string {
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -100,11 +102,11 @@ export default function SettingsPage() {
         <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-white/80 dark:bg-slate-800/80 shadow-sm p-5">
           <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100 mb-4">
             <KeyRound size={18} strokeWidth={1.8} />
-            <h2 className="text-[15px] font-semibold m-0">智谱 AI (GLM) 配置</h2>
+            <h2 className="text-[15px] font-semibold m-0">{t("settings.title")}</h2>
           </div>
 
           <label className="text-[13px] text-slate-600 dark:text-slate-300 font-medium mb-2">
-            API Key
+            {t("settings.apiKey.label")}
           </label>
 
           <div className="flex items-center gap-2">
@@ -112,7 +114,7 @@ export default function SettingsPage() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               type={showKey ? "text" : "password"}
-              placeholder="请输入你的智谱 AI API Key"
+              placeholder={t("settings.apiKey.placeholder")}
               className="flex-1 h-10 px-3 rounded-xl bg-white/60 dark:bg-slate-900/30 border border-slate-200/70 dark:border-slate-700/60 outline-none text-[13px] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               spellCheck={false}
               autoFocus
@@ -129,14 +131,14 @@ export default function SettingsPage() {
           </div>
 
           <p className="mt-3 text-[12px] leading-5 text-slate-500 dark:text-slate-400">
-            API Key 将保存在本机配置文件中，仅用于调用智谱 AI 接口。
+            {t("settings.apiKey.note")}
           </p>
 
           <div className="mt-auto flex items-center justify-between gap-3 pt-4">
             <div className="min-h-[20px] text-[12px]">
               {loading ? (
                 <span className="text-slate-400 dark:text-slate-500">
-                  正在读取配置...
+                  {t("settings.status.loading")}
                 </span>
               ) : error ? (
                 <span className="text-rose-600 dark:text-rose-400">
@@ -144,7 +146,7 @@ export default function SettingsPage() {
                 </span>
               ) : saved ? (
                 <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                  <Check size={14} /> 已保存
+                  <Check size={14} /> {t("settings.status.saved")}
                 </span>
               ) : (
                 <span className="text-slate-400 dark:text-slate-500">
@@ -162,7 +164,7 @@ export default function SettingsPage() {
                   : "bg-slate-200/70 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 cursor-not-allowed"
               }`}
             >
-              {saving ? "保存中..." : "保存"}
+              {saving ? t("settings.saving") : t("settings.save")}
             </button>
           </div>
         </div>

@@ -93,7 +93,11 @@ async fn get_app_settings(app: AppHandle) -> Result<AppSettings, String> {
 async fn set_zhipu_api_key(app: AppHandle, api_key: String) -> Result<(), String> {
     let mut settings = read_app_settings(&app).await.unwrap_or_default();
     let trimmed = api_key.trim().to_string();
-    settings.zhipu_api_key = if trimmed.is_empty() { None } else { Some(trimmed) };
+    settings.zhipu_api_key = if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed)
+    };
     write_app_settings(&app, &settings).await
 }
 
@@ -122,16 +126,35 @@ fn strip_code_fences(text: &str) -> String {
 
 // Get translation from Zhipu AI (GLM) API
 #[tauri::command]
-async fn get_translation(app: AppHandle, text: String, target_lang: String) -> Result<String, String> {
+async fn get_translation(
+    app: AppHandle,
+    text: String,
+    target_lang: String,
+    tone: String,
+) -> Result<String, String> {
     let settings = read_app_settings(&app).await.unwrap_or_default();
     let api_key = settings
         .zhipu_api_key
         .or_else(|| std::env::var("ZHIPU_API_KEY").ok())
-        .ok_or_else(|| "未配置智谱 AI API Key：请在设置页填写或设置环境变量 ZHIPU_API_KEY".to_string())?;
+        .ok_or_else(|| {
+            "未配置智谱 AI API Key：请在设置页填写或设置环境变量 ZHIPU_API_KEY".to_string()
+        })?;
 
     let target = normalize_target_language(&target_lang);
+
+    // Adjust the instruction based on the tone
+    let tone_instruction = match tone.as_str() {
+        "Formal" => "Use a professional, formal, and polite tone suitable for business contexts.",
+        "Casual" => "Use a casual, natural, and conversational tone as used in daily life.",
+        "Academic" => "Use an academic, rigorous, and objective tone with appropriate terminology.",
+        "Creative" => {
+            "Use a creative, vivid, and expressive tone with literary devices if appropriate."
+        }
+        _ => "Use a natural and fluent tone.",
+    };
+
     let system_prompt = format!(
-        "你是一个专业翻译引擎。请将用户提供的文本翻译成{target}。要求：仅输出译文纯文本，不要添加解释、引号、Markdown、编号或多余内容；尽量保留原文换行与格式。",
+        "You are a professional translation engine. Translate the provided text into {target}. {tone_instruction} Requirements: Output ONLY the translated text without explanations, quotes, Markdown, numbering, or extra content. Preserve original line breaks and formatting as much as possible.",
     );
 
     let payload = GlmChatCompletionRequest {
@@ -207,10 +230,12 @@ async fn get_selected_text() -> Result<String, String> {
         })?;
         println!("Meta key pressed");
 
-        enigo.key(Key::Unicode('c'), Direction::Click).map_err(|e| {
-            eprintln!("Failed to click 'c' key: {}", e);
-            e.to_string()
-        })?;
+        enigo
+            .key(Key::Unicode('c'), Direction::Click)
+            .map_err(|e| {
+                eprintln!("Failed to click 'c' key: {}", e);
+                e.to_string()
+            })?;
         println!("'c' key clicked");
 
         enigo.key(Key::Meta, Direction::Release).map_err(|e| {
@@ -227,10 +252,12 @@ async fn get_selected_text() -> Result<String, String> {
             eprintln!("Failed to press Control key: {}", e);
             e.to_string()
         })?;
-        enigo.key(Key::Unicode('c'), Direction::Click).map_err(|e| {
-            eprintln!("Failed to click 'c' key: {}", e);
-            e.to_string()
-        })?;
+        enigo
+            .key(Key::Unicode('c'), Direction::Click)
+            .map_err(|e| {
+                eprintln!("Failed to click 'c' key: {}", e);
+                e.to_string()
+            })?;
         enigo.key(Key::Control, Direction::Release).map_err(|e| {
             eprintln!("Failed to release Control key: {}", e);
             e.to_string()
