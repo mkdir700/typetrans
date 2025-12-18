@@ -33,6 +33,21 @@
         "width": 600,
         "height": 250,
         "center": true
+      },
+      {
+        "label": "settings",
+        "title": "Settings",
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "fullscreen": false,
+        "resizable": false,
+        "width": 520,
+        "height": 280,
+        "center": true
       }
     ],
     "security": {

@@ -4,15 +4,8 @@
 
 ### 1. 设置 API Key
 
-```bash
-# Linux/macOS
-export DEEPL_API_KEY="your-deepl-api-key"
-
-# Windows PowerShell
-$env:DEEPL_API_KEY="your-deepl-api-key"
-```
-
-获取 DeepL API Key: https://www.deepl.com/pro-api
+- 打开翻译窗口右上角设置按钮，填写并保存「智谱 AI API Key」
+- （可选）也可以使用环境变量 `ZHIPU_API_KEY`
 
 ### 2. 安装依赖
 
@@ -80,4 +73,3 @@ let shortcut = "Alt+T"; // 改为你想要的快捷键
 ## 📚 更多信息
 
 详细文档请查看 [SETUP.md](./SETUP.md)
-

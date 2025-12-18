@@ -35,7 +35,7 @@ TypeTrans 是一个基于 Tauri v2、React 和 TypeScript 构建的跨平台桌�
 - 🎯 **智能文本获取** - 自动获取选中文本
 - 🪟 **悬浮窗口** - 无边框、透明、置顶的优雅界面
 - 🌍 **多语言支持** - 支持中文、英文、日文等多种语言
-- ⚡ **实时翻译** - 基于 DeepL API 的高质量翻译
+- ⚡ **实时翻译** - 基于 智谱 AI (GLM-4.6) 的高质量翻译
 - 📋 **快速复制** - 一键复制翻译结果
 - 🎨 **现代化 UI** - 简洁美观的用户界面
 - 🔒 **轻量安全** - 基于 Rust 的高性能后端
@@ -46,7 +46,7 @@ TypeTrans 是一个基于 Tauri v2、React 和 TypeScript 构建的跨平台桌�
 
 - [Node.js](https://nodejs.org/) 18+ 或 [Bun](https://bun.sh/)
 - [Rust](https://www.rust-lang.org/) 1.70+
-- [DeepL API Key](https://www.deepl.com/pro-api) (免费或付费版本)
+- [智谱 AI API Key](https://open.bigmodel.cn/) (用于调用 GLM-4.6)
 - **macOS 用户**: 需要授予辅助功能权限(应用会自动引导)
 
 ### 安装步骤
@@ -68,18 +68,8 @@ npm install
 
 3. **配置 API Key**
 
-```bash
-# Linux/macOS
-export DEEPL_API_KEY="your-deepl-api-key-here"
-
-# Windows PowerShell
-$env:DEEPL_API_KEY="your-deepl-api-key-here"
-
-# Windows CMD
-set DEEPL_API_KEY=your-deepl-api-key-here
-```
-
-> 💡 **提示**: 你也可以创建 `.env` 文件 (参考 `.env.example`)
+- 打开翻译窗口右上角的设置按钮，填写并保存「智谱 AI API Key」
+- （可选）开发环境也可以使用环境变量 `ZHIPU_API_KEY`
 
 4. **运行开发环境**
 
@@ -155,7 +145,7 @@ let shortcut = "Alt+T"; // 修改为你想要的快捷键
 
 ### API 服务
 
-- **翻译服务**: DeepL API
+- **翻译服务**: 智谱 AI GLM-4.6
 
 ## 📂 项目结构
 
@@ -229,13 +219,13 @@ clipboard.get_text()?
 
 #### 调用翻译 API
 
-使用 `reqwest` 调用 DeepL API:
+使用 `reqwest` 调用智谱 AI Chat Completions API:
 
 ```rust
 let res = client
-    .post("https://api-free.deepl.com/v2/translate")
-    .header("Authorization", format!("DeepL-Auth-Key {}", api_key))
-    .form(&[("text", text), ("target_lang", target_lang)])
+    .post("https://open.bigmodel.cn/api/paas/v4/chat/completions")
+    .header("Authorization", format!("Bearer {}", api_key))
+    .json(&payload)
     .send()
     .await?;
 ```
@@ -266,10 +256,7 @@ let res = client
 - `ZH` - 中文
 - `EN` - 英文
 - `JA` - 日文
-- `DE` - 德文
-- `FR` - 法文
-- `ES` - 西班牙文
-- 更多语言请参考 [DeepL API 文档](https://www.deepl.com/docs-api)
+> 💡 其他语言也可以直接传入目标语言代码/名称，模型会尽量按目标语言输出。
 
 ## ❓ 常见问题
 
@@ -287,21 +274,21 @@ let res = client
 
 ### 翻译失败?
 
-- ✅ 检查 `DEEPL_API_KEY` 环境变量是否正确设置
+- ✅ 检查设置页中是否已保存「智谱 AI API Key」（或环境变量 `ZHIPU_API_KEY`）
 - ✅ 检查网络连接是否正常
-- ✅ 确认 DeepL API 配额未超限
+- ✅ 确认智谱 AI 账号额度/配额未超限
 - ✅ 查看控制台错误日志
 
 ### 如何更换翻译服务?
 
-目前支持 DeepL API。如需使用其他翻译服务 (如 Google Translate、Azure Translator),需要修改 `src-tauri/src/lib.rs` 中的 `get_translation` 函数。
+目前支持智谱 AI GLM-4.6。如需接入其他翻译服务，需要修改 `src-tauri/src/lib.rs` 中的 `get_translation` 函数。
 
 ## 🗺️ 开发路线图
 
 - [ ] 支持更多翻译服务 (Google Translate, Azure Translator)
 - [ ] 添加翻译历史记录
 - [ ] 支持自定义快捷键 (通过 UI 配置)
-- [ ] 添加设置界面
+- [x] 添加设置界面
 - [ ] 支持更多语言
 - [ ] 添加发音功能
 - [ ] 支持批量翻译

@@ -1,49 +1,187 @@
 use arboard::Clipboard;
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
-// Translation response structure
-#[derive(Debug, Serialize, Deserialize)]
-struct TranslationResponse {
-    translations: Vec<Translation>,
+#[derive(Debug, Serialize)]
+struct GlmChatCompletionRequest {
+    model: String,
+    messages: Vec<GlmMessage>,
+    temperature: f32,
+    top_p: f32,
+    stream: bool,
+    do_sample: bool,
+    response_format: GlmResponseFormat,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Translation {
-    text: String,
+#[derive(Debug, Serialize)]
+struct GlmResponseFormat {
+    #[serde(rename = "type")]
+    kind: String,
 }
 
-// Get translation from DeepL API
+#[derive(Debug, Serialize)]
+struct GlmMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GlmChatCompletionResponse {
+    choices: Vec<GlmChoice>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GlmChoice {
+    message: GlmAssistantMessage,
+}
+
+#[derive(Debug, Deserialize)]
+struct GlmAssistantMessage {
+    content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(default)]
+struct AppSettings {
+    zhipu_api_key: Option<String>,
+}
+
+fn app_settings_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("Failed to resolve app config dir: {}", e))?;
+    Ok(dir.join("settings.json"))
+}
+
+async fn read_app_settings(app: &AppHandle) -> Result<AppSettings, String> {
+    let path = app_settings_path(app)?;
+    let data = match tokio::fs::read_to_string(&path).await {
+        Ok(data) => data,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(AppSettings::default()),
+        Err(e) => return Err(format!("Failed to read settings: {}", e)),
+    };
+
+    serde_json::from_str(&data).map_err(|e| format!("Failed to parse settings: {}", e))
+}
+
+async fn write_app_settings(app: &AppHandle, settings: &AppSettings) -> Result<(), String> {
+    let path = app_settings_path(app)?;
+    if let Some(dir) = path.parent() {
+        tokio::fs::create_dir_all(dir)
+            .await
+            .map_err(|e| format!("Failed to create settings dir: {}", e))?;
+    }
+    let data = serde_json::to_string_pretty(settings)
+        .map_err(|e| format!("Failed to serialize settings: {}", e))?;
+    tokio::fs::write(&path, data)
+        .await
+        .map_err(|e| format!("Failed to write settings: {}", e))?;
+    Ok(())
+}
+
 #[tauri::command]
-async fn get_translation(text: String, target_lang: String) -> Result<String, String> {
-    // TODO: Replace with your actual API key or load from environment variable
-    let api_key = std::env::var("DEEPL_API_KEY").unwrap_or_else(|_| "YOUR_API_KEY".to_string());
+async fn get_app_settings(app: AppHandle) -> Result<AppSettings, String> {
+    read_app_settings(&app).await
+}
+
+#[tauri::command]
+async fn set_zhipu_api_key(app: AppHandle, api_key: String) -> Result<(), String> {
+    let mut settings = read_app_settings(&app).await.unwrap_or_default();
+    let trimmed = api_key.trim().to_string();
+    settings.zhipu_api_key = if trimmed.is_empty() { None } else { Some(trimmed) };
+    write_app_settings(&app, &settings).await
+}
+
+fn normalize_target_language(target_lang: &str) -> String {
+    let normalized = target_lang.trim().to_ascii_uppercase();
+    match normalized.as_str() {
+        "ZH" | "ZH-CN" | "ZH_CN" | "ZH-HANS" | "CHINESE" => "中文".to_string(),
+        "EN" | "EN-US" | "EN_GB" | "EN-GB" | "ENGLISH" => "英文".to_string(),
+        "JA" | "JP" | "JAPANESE" => "日文".to_string(),
+        _ => target_lang.trim().to_string(),
+    }
+}
+
+fn strip_code_fences(text: &str) -> String {
+    let trimmed = text.trim();
+    if trimmed.starts_with("```") && trimmed.ends_with("```") {
+        let without_start = trimmed.trim_start_matches("```");
+        let without_lang = without_start
+            .trim_start_matches(|c: char| c.is_ascii_alphanumeric() || c == '-')
+            .trim_start_matches(|c: char| c == '\n' || c == '\r' || c == ' ');
+        let without_end = without_lang.trim_end_matches("```").trim();
+        return without_end.to_string();
+    }
+    trimmed.to_string()
+}
+
+// Get translation from Zhipu AI (GLM) API
+#[tauri::command]
+async fn get_translation(app: AppHandle, text: String, target_lang: String) -> Result<String, String> {
+    let settings = read_app_settings(&app).await.unwrap_or_default();
+    let api_key = settings
+        .zhipu_api_key
+        .or_else(|| std::env::var("ZHIPU_API_KEY").ok())
+        .ok_or_else(|| "未配置智谱 AI API Key：请在设置页填写或设置环境变量 ZHIPU_API_KEY".to_string())?;
+
+    let target = normalize_target_language(&target_lang);
+    let system_prompt = format!(
+        "你是一个专业翻译引擎。请将用户提供的文本翻译成{target}。要求：仅输出译文纯文本，不要添加解释、引号、Markdown、编号或多余内容；尽量保留原文换行与格式。",
+    );
+
+    let payload = GlmChatCompletionRequest {
+        model: "glm-4.6".to_string(),
+        messages: vec![
+            GlmMessage {
+                role: "system".to_string(),
+                content: system_prompt,
+            },
+            GlmMessage {
+                role: "user".to_string(),
+                content: text,
+            },
+        ],
+        temperature: 0.2,
+        top_p: 0.9,
+        stream: false,
+        do_sample: false,
+        response_format: GlmResponseFormat {
+            kind: "text".to_string(),
+        },
+    };
 
     let client = reqwest::Client::new();
     let res = client
-        .post("https://api-free.deepl.com/v2/translate")
-        .header("Authorization", format!("DeepL-Auth-Key {}", api_key))
-        .form(&[
-            ("text", text.as_str()),
-            ("target_lang", target_lang.as_str()),
-        ])
+        .post("https://open.bigmodel.cn/api/paas/v4/chat/completions")
+        .header("Authorization", format!("Bearer {}", api_key))
+        .json(&payload)
         .send()
         .await
-        .map_err(|e| format!("Request failed: {}", e))?;
+        .map_err(|e| format!("请求失败: {}", e))?;
 
-    let translation_response: TranslationResponse = res
+    if !res.status().is_success() {
+        let status = res.status();
+        let body = res.text().await.unwrap_or_default();
+        return Err(format!("接口返回错误 ({}): {}", status, body));
+    }
+
+    let data: GlmChatCompletionResponse = res
         .json()
         .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
+        .map_err(|e| format!("解析响应失败: {}", e))?;
 
-    Ok(translation_response
-        .translations
+    let content = data
+        .choices
         .first()
-        .map(|t| t.text.clone())
-        .unwrap_or_else(|| "Translation failed".to_string()))
+        .map(|c| c.message.content.clone())
+        .unwrap_or_else(|| "翻译失败：未返回内容".to_string());
+
+    Ok(strip_code_fences(&content))
 }
 
 // Get selected text from clipboard
@@ -150,6 +288,31 @@ async fn hide_translator_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+// Show settings window
+#[tauri::command]
+async fn show_settings_window(app: AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("settings")
+        .ok_or("Settings window not found")?;
+
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+// Hide settings window
+#[tauri::command]
+async fn hide_settings_window(app: AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("settings")
+        .ok_or("Settings window not found")?;
+
+    window.hide().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -162,6 +325,13 @@ pub fn run() {
             // 为 translator 窗口应用 macOS 原生模糊效果
             #[cfg(target_os = "macos")]
             if let Some(window) = app.get_webview_window("translator") {
+                apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, Some(16.0))
+                    .expect("Failed to apply vibrancy");
+            }
+
+            // 为 settings 窗口应用 macOS 原生模糊效果
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("settings") {
                 apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, Some(16.0))
                     .expect("Failed to apply vibrancy");
             }
@@ -199,11 +369,15 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            get_app_settings,
+            set_zhipu_api_key,
             get_translation,
             get_selected_text,
             copy_to_clipboard,
             show_translator_window,
-            hide_translator_window
+            hide_translator_window,
+            show_settings_window,
+            hide_settings_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import Translator from "./Translator";
 import PermissionCheck from "./PermissionCheck";
+import SettingsPage from "./SettingsPage";
 import "./App.css";
 
 function App() {
@@ -20,6 +21,11 @@ function App() {
   if (windowLabel === "translator") {
     console.log("Rendering Translator component");
     return <Translator />;
+  }
+
+  if (windowLabel === "settings") {
+    console.log("Rendering Settings component");
+    return <SettingsPage />;
   }
 
   // Show loading state while determining window label
@@ -55,7 +61,7 @@ function App() {
         </ul>
 
         <div className="note">
-          <strong>注意:</strong> 请在环境变量中设置 <code>DEEPL_API_KEY</code>{" "}
+          <strong>注意:</strong> 请在设置中配置 <code>智谱 AI API Key</code>{" "}
           以使用翻译功能。
         </div>
       </div>

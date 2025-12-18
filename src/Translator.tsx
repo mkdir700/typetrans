@@ -7,8 +7,6 @@ import {
   Settings,
   Copy,
   Check,
-  Mic,
-  Image as ImageIcon,
 } from "lucide-react";
 
 // ============ Main Component ============
@@ -55,6 +53,12 @@ function Translator() {
     const unlisten = listen("global-shortcut-triggered", async () => {
       try {
         await invoke("show_translator_window");
+        try {
+          const selectedText = await invoke<string>("get_selected_text");
+          if (selectedText?.trim()) setInputText(selectedText);
+        } catch (error) {
+          console.warn("Failed to get selected text:", error);
+        }
         setTimeout(() => inputRef.current?.focus(), 100);
       } catch (error) {
         console.error("Error showing window:", error);
@@ -74,20 +78,6 @@ function Translator() {
     }
   };
 
-  // 4. 手动翻译提交
-  const handleTranslate = async () => {
-    if (!inputText.trim()) return;
-    try {
-      const translation = await invoke<string>("get_translation", {
-        text: inputText,
-        targetLang: targetLang,
-      });
-      setTranslatedText(translation);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     // 圆角窗口容器 - 使用原生 vibrancy 模糊效果
     <div
@@ -100,10 +90,8 @@ function Translator() {
       <header
         onMouseDown={(e) => {
           // 仅左键拖动，且不是点击按钮时
-          if (
-            e.buttons === 1 &&
-            (e.target as HTMLElement).tagName !== "BUTTON"
-          ) {
+          const target = e.target as HTMLElement | null;
+          if (e.buttons === 1 && !target?.closest("button")) {
             getCurrentWindow().startDragging();
           }
         }}
@@ -118,7 +106,17 @@ function Translator() {
           <button className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors p-1.5 rounded-md hover:bg-slate-500/10 dark:hover:bg-slate-400/10">
             <Languages size={16} strokeWidth={1.8} />
           </button>
-          <button className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors p-1.5 rounded-md hover:bg-slate-500/10 dark:hover:bg-slate-400/10">
+          <button
+            onClick={async () => {
+              try {
+                await invoke("show_settings_window");
+              } catch (error) {
+                console.error("Error showing settings window:", error);
+              }
+            }}
+            className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors p-1.5 rounded-md hover:bg-slate-500/10 dark:hover:bg-slate-400/10"
+            aria-label="Settings"
+          >
             <Settings size={16} strokeWidth={1.8} />
           </button>
         </div>
