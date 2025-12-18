@@ -1,5 +1,4 @@
 use arboard::Clipboard;
-use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
@@ -212,72 +211,21 @@ async fn get_translation(
 async fn get_selected_text() -> Result<String, String> {
     println!("get_selected_text called");
 
-    // Simulate Ctrl+C to copy selected text
-    println!("Creating Enigo instance...");
-    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| {
-        eprintln!("Failed to create Enigo: {}", e);
-        e.to_string()
-    })?;
-    println!("Enigo instance created");
-
-    // Press Ctrl+C (or Cmd+C on macOS)
-    #[cfg(target_os = "macos")]
-    {
-        println!("Simulating Cmd+C on macOS...");
-        enigo.key(Key::Meta, Direction::Press).map_err(|e| {
-            eprintln!("Failed to press Meta key: {}", e);
-            e.to_string()
-        })?;
-        println!("Meta key pressed");
-
-        enigo
-            .key(Key::Unicode('c'), Direction::Click)
-            .map_err(|e| {
-                eprintln!("Failed to click 'c' key: {}", e);
-                e.to_string()
-            })?;
-        println!("'c' key clicked");
-
-        enigo.key(Key::Meta, Direction::Release).map_err(|e| {
-            eprintln!("Failed to release Meta key: {}", e);
-            e.to_string()
-        })?;
-        println!("Meta key released");
-    }
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        println!("Simulating Ctrl+C...");
-        enigo.key(Key::Control, Direction::Press).map_err(|e| {
-            eprintln!("Failed to press Control key: {}", e);
-            e.to_string()
-        })?;
-        enigo
-            .key(Key::Unicode('c'), Direction::Click)
-            .map_err(|e| {
-                eprintln!("Failed to click 'c' key: {}", e);
-                e.to_string()
-            })?;
-        enigo.key(Key::Control, Direction::Release).map_err(|e| {
-            eprintln!("Failed to release Control key: {}", e);
-            e.to_string()
-        })?;
-    }
-
-    // Wait for clipboard to update
-    println!("Waiting for clipboard to update...");
-    std::thread::sleep(std::time::Duration::from_millis(100));
-
-    // Read from clipboard
+    // Read from clipboard directly - user should copy text first (Cmd+C)
     println!("Reading from clipboard...");
     let mut clipboard = Clipboard::new().map_err(|e| {
         eprintln!("Failed to create clipboard: {}", e);
-        e.to_string()
+        format!("Failed to access clipboard: {}", e)
     })?;
-    let text = clipboard.get_text().map_err(|e| {
-        eprintln!("Failed to get text from clipboard: {}", e);
-        e.to_string()
-    })?;
+
+    let text = clipboard.get_text().unwrap_or_default();
+
+    if text.trim().is_empty() {
+        println!("Clipboard is empty");
+        return Err(
+            "No text in clipboard. Please copy text first (Cmd+C), then use Alt+T.".to_string(),
+        );
+    }
 
     println!("Got text from clipboard: {}", text);
     Ok(text)
@@ -311,6 +259,20 @@ async fn hide_translator_window(app: AppHandle) -> Result<(), String> {
         .ok_or("Translator window not found")?;
 
     window.hide().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+// Toggle translator window always-on-top (pin)
+#[tauri::command]
+async fn toggle_translator_pin(app: AppHandle, pinned: bool) -> Result<(), String> {
+    let window = app
+        .get_webview_window("translator")
+        .ok_or("Translator window not found")?;
+
+    window
+        .set_always_on_top(pinned)
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
@@ -403,6 +365,7 @@ pub fn run() {
             copy_to_clipboard,
             show_translator_window,
             hide_translator_window,
+            toggle_translator_pin,
             show_settings_window,
             hide_settings_window
         ])

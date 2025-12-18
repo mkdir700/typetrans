@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Settings, Copy, Check } from "lucide-react";
+import { Pin, Copy, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // ============ 类型定义 ============
@@ -62,7 +62,8 @@ const Toolbar: React.FC<{
   onSwitchLanguages: () => void;
   currentTone: Tone;
   onSetTone: (tone: Tone) => void;
-  onSettingsClick: () => void;
+  isPinned: boolean;
+  onTogglePin: () => void;
 }> = ({
   sourceLang,
   targetLang,
@@ -71,7 +72,8 @@ const Toolbar: React.FC<{
   onSwitchLanguages,
   currentTone,
   onSetTone,
-  onSettingsClick,
+  isPinned,
+  onTogglePin,
 }) => {
   const [showSourceMenu, setShowSourceMenu] = useState(false);
   const [showTargetMenu, setShowTargetMenu] = useState(false);
@@ -233,13 +235,17 @@ const Toolbar: React.FC<{
           </div>
         </div>
 
-        {/* 设置按钮 */}
+        {/* Pin 按钮 */}
         <button
-          onClick={onSettingsClick}
-          className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-500/10 dark:hover:bg-slate-400/10"
-          aria-label="Settings"
+          onClick={onTogglePin}
+          className={`transition-colors p-1.5 rounded-lg hover:bg-slate-500/10 dark:hover:bg-slate-400/10 ${
+            isPinned
+              ? "text-blue-600 dark:text-blue-400"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+          aria-label="Toggle Pin"
         >
-          <Settings size={15} strokeWidth={1.8} />
+          <Pin size={15} strokeWidth={1.8} className={isPinned ? "fill-current" : ""} />
         </button>
       </div>
     </div>
@@ -257,6 +263,7 @@ function Translator() {
   const [currentTone, setCurrentTone] = useState<Tone>("Casual");
   const [copied, setCopied] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
 
   // 引用与防抖
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -326,9 +333,19 @@ function Translator() {
         await invoke("show_translator_window");
         try {
           const selectedText = await invoke<string>("get_selected_text");
-          if (selectedText?.trim()) setInputText(selectedText);
+          if (selectedText?.trim()) {
+            setInputText(selectedText);
+          }
         } catch (error) {
           console.warn("Failed to get selected text:", error);
+          // Show user-friendly message when clipboard is empty
+          const errorMsg = typeof error === 'string' ? error : String(error);
+          if (errorMsg.includes("No text in clipboard") || errorMsg.includes("clipboard")) {
+            setInputText(""); // Clear input
+            setTranslatedText(""); // Clear translation
+            // Focus input so user can paste manually
+            setTimeout(() => inputRef.current?.focus(), 100);
+          }
         }
         setTimeout(() => inputRef.current?.focus(), 100);
       } catch (error) {
@@ -349,14 +366,32 @@ function Translator() {
     }
   };
 
-  // 打开设置窗口
-  const handleSettingsClick = async () => {
+  // Toggle pin (always-on-top)
+  const handleTogglePin = async () => {
+    const newPinState = !isPinned;
+    setIsPinned(newPinState);
     try {
-      await invoke("show_settings_window");
+      await invoke("toggle_translator_pin", { pinned: newPinState });
     } catch (error) {
-      console.error("Error showing settings window:", error);
+      console.error("Error toggling pin:", error);
+      // Revert state on error
+      setIsPinned(!newPinState);
     }
   };
+
+  // ESC key to close window
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        invoke("hide_translator_window").catch((err: unknown) =>
+          console.error("Error hiding window:", err)
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     // 圆角窗口容器 - 使用原生 vibrancy 模糊效果
@@ -381,7 +416,8 @@ function Translator() {
           onSwitchLanguages={toggleLanguages}
           currentTone={currentTone}
           onSetTone={setCurrentTone}
-          onSettingsClick={handleSettingsClick}
+          isPinned={isPinned}
+          onTogglePin={handleTogglePin}
         />
 
         {/* ========== 内容区域 ========== */}
