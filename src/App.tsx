@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { useTranslation } from "react-i18next";
 import Translator from "./Translator";
-import PermissionCheck from "./PermissionCheck";
 import SettingsPage from "./SettingsPage";
+import Home from "./Home";
+import About from "./pages/About";
+import ModelSettings from "./pages/ModelSettings";
+import ShortcutSettings from "./pages/ShortcutSettings";
 import "./App.css";
 
 function App() {
-  const { t } = useTranslation();
   const [windowLabel, setWindowLabel] = useState<string>("");
 
   useEffect(() => {
@@ -35,37 +37,21 @@ function App() {
     return <div>Loading...</div>;
   }
 
-  // Main window - can be used for settings or hidden
-  console.log("Rendering main window");
+  // Main window - use React Router for navigation
+  console.log("Rendering main window with routing");
   return (
-    <div className="main-container">
-      <h1>{t("dashboard.title")}</h1>
-
-      {/* macOS Permission Check */}
-      <PermissionCheck />
-
-      <div className="info-section">
-        <h2>{t("dashboard.instructions.title")}</h2>
-        <ul>
-          <li>{t("dashboard.instructions.step1")}</li>
-          <li>{t("dashboard.instructions.step2")}</li>
-          <li>{t("dashboard.instructions.step3")}</li>
-          <li>{t("dashboard.instructions.step4")}</li>
-        </ul>
-
-        <h2>{t("dashboard.languages.title")}</h2>
-        <ul>
-          <li>{t("dashboard.languages.zh")}</li>
-          <li>{t("dashboard.languages.en")}</li>
-          <li>{t("dashboard.languages.ja")}</li>
-        </ul>
-
-        <div className="note">
-          <strong>{t("dashboard.note.title")}</strong> {t("dashboard.note.body")}
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />}>
+          <Route index element={<Navigate to="/about" replace />} />
+          <Route path="about" element={<About />} />
+          <Route path="model-settings" element={<ModelSettings />} />
+          <Route path="shortcut-settings" element={<ShortcutSettings />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
 export default App;
+
