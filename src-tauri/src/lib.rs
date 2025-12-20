@@ -1,4 +1,5 @@
 use arboard::Clipboard;
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
@@ -131,15 +132,24 @@ async fn get_translation(
     target_lang: String,
     tone: String,
 ) -> Result<String, String> {
+    info!(
+        "[get_translation] Called with text length: {}, target_lang: {}, tone: {}",
+        text.len(),
+        target_lang,
+        tone
+    );
+
     let settings = read_app_settings(&app).await.unwrap_or_default();
     let api_key = settings
         .zhipu_api_key
         .or_else(|| std::env::var("ZHIPU_API_KEY").ok())
         .ok_or_else(|| {
+            error!("[get_translation] No API key configured");
             "未配置智谱 AI API Key：请在设置页填写或设置环境变量 ZHIPU_API_KEY".to_string()
         })?;
 
     let target = normalize_target_language(&target_lang);
+    debug!("[get_translation] Normalized target language: {}", target);
 
     // Adjust the instruction based on the tone
     let tone_instruction = match tone.as_str() {
@@ -155,6 +165,8 @@ async fn get_translation(
     let system_prompt = format!(
         "You are a professional translation engine. Translate the provided text into {target}. {tone_instruction} Requirements: Output ONLY the translated text without explanations, quotes, Markdown, numbering, or extra content. Preserve original line breaks and formatting as much as possible.",
     );
+
+    debug!("[get_translation] System prompt: {}", system_prompt);
 
     let payload = GlmChatCompletionRequest {
         model: "glm-4.6".to_string(),
@@ -177,6 +189,7 @@ async fn get_translation(
         },
     };
 
+    info!("[get_translation] Sending request to GLM API");
     let client = reqwest::Client::new();
     let res = client
         .post("https://open.bigmodel.cn/api/paas/v4/chat/completions")
@@ -184,50 +197,65 @@ async fn get_translation(
         .json(&payload)
         .send()
         .await
-        .map_err(|e| format!("请求失败: {}", e))?;
+        .map_err(|e| {
+            error!("[get_translation] Request failed: {}", e);
+            format!("请求失败: {}", e)
+        })?;
 
     if !res.status().is_success() {
         let status = res.status();
         let body = res.text().await.unwrap_or_default();
+        error!("[get_translation] API error ({}): {}", status, body);
         return Err(format!("接口返回错误 ({}): {}", status, body));
     }
 
-    let data: GlmChatCompletionResponse = res
-        .json()
-        .await
-        .map_err(|e| format!("解析响应失败: {}", e))?;
+    let data: GlmChatCompletionResponse = res.json().await.map_err(|e| {
+        error!("[get_translation] Failed to parse response: {}", e);
+        format!("解析响应失败: {}", e)
+    })?;
 
     let content = data
         .choices
         .first()
         .map(|c| c.message.content.clone())
-        .unwrap_or_else(|| "翻译失败：未返回内容".to_string());
+        .unwrap_or_else(|| {
+            warn!("[get_translation] No content returned from API");
+            "翻译失败：未返回内容".to_string()
+        });
 
-    Ok(strip_code_fences(&content))
+    let result = strip_code_fences(&content);
+    info!(
+        "[get_translation] Translation successful, result length: {}",
+        result.len()
+    );
+    Ok(result)
 }
 
 // Get selected text from clipboard
 #[tauri::command]
 async fn get_selected_text() -> Result<String, String> {
-    println!("get_selected_text called");
+    info!("[get_selected_text] Called");
 
     // Read from clipboard directly - user should copy text first (Cmd+C)
-    println!("Reading from clipboard...");
+    debug!("[get_selected_text] Reading from clipboard");
     let mut clipboard = Clipboard::new().map_err(|e| {
-        eprintln!("Failed to create clipboard: {}", e);
+        error!("[get_selected_text] Failed to create clipboard: {}", e);
         format!("Failed to access clipboard: {}", e)
     })?;
 
     let text = clipboard.get_text().unwrap_or_default();
 
     if text.trim().is_empty() {
-        println!("Clipboard is empty");
+        warn!("[get_selected_text] Clipboard is empty");
         return Err(
             "No text in clipboard. Please copy text first (Cmd+C), then use Alt+T.".to_string(),
         );
     }
 
-    println!("Got text from clipboard: {}", text);
+    info!(
+        "[get_selected_text] Got text from clipboard, length: {}",
+        text.len()
+    );
     Ok(text)
 }
 
@@ -305,10 +333,21 @@ async fn hide_settings_window(app: AppHandle) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir { file_name: None }),
+                ])
+                .level(log::LevelFilter::Debug)
+                .build(),
+        )
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_macos_permissions::init())
         .setup(|app| {
+            info!("[Setup] Application starting");
             let handle = app.handle().clone();
 
             // 为 translator 窗口应用 macOS 原生模糊效果
@@ -330,28 +369,28 @@ pub fn run() {
 
             match app.global_shortcut()
                 .on_shortcut(shortcut, move |_app, _event, _shortcut| {
-                    println!("Global shortcut '{}' triggered", shortcut);
+                    info!("[Global Shortcut] '{}' triggered", shortcut);
 
                     // Get translator window and emit event to it
                     if let Some(window) = handle.get_webview_window("translator") {
                         if let Err(e) = window.emit("global-shortcut-triggered", ()) {
-                            eprintln!("Failed to emit event to translator window: {}", e);
+                            error!("[Global Shortcut] Failed to emit event to translator window: {}", e);
                         } else {
-                            println!("Event emitted to translator window");
+                            debug!("[Global Shortcut] Event emitted to translator window");
                         }
                     } else {
-                        eprintln!("Translator window not found");
+                        error!("[Global Shortcut] Translator window not found");
                     }
                 }) {
                 Ok(_) => {
                     if let Err(e) = app.global_shortcut().register(shortcut) {
-                        eprintln!("Failed to register global shortcut '{}': {}. Make sure the app has accessibility permissions.", shortcut, e);
+                        error!("[Global Shortcut] Failed to register '{}': {}. Make sure the app has accessibility permissions.", shortcut, e);
                     } else {
-                        println!("Global shortcut '{}' registered successfully", shortcut);
+                        info!("[Global Shortcut] '{}' registered successfully", shortcut);
                     }
                 }
                 Err(e) => {
-                    eprintln!("Failed to set up global shortcut handler '{}': {}. Make sure the app has accessibility permissions.", shortcut, e);
+                    error!("[Global Shortcut] Failed to set up handler '{}': {}. Make sure the app has accessibility permissions.", shortcut, e);
                 }
             }
 

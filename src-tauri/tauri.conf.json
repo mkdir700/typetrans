@@ -30,8 +30,10 @@
         "skipTaskbar": true,
         "fullscreen": false,
         "resizable": true,
-        "width": 600,
-        "height": 250,
+        "width": 420,
+        "height": 200,
+        "minWidth": 320,
+        "minHeight": 180,
         "center": true
       },
       {
@@ -67,5 +69,6 @@
     "macOS": {
       "entitlements": "Entitlements.plist"
     }
-  }
+  },
+  "plugins": {}
 }
