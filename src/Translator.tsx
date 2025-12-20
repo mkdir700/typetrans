@@ -13,6 +13,11 @@ interface Language {
   name: string;
 }
 
+// Temporary type definition until shared
+type AppSettings = {
+  active_engine?: string;
+};
+
 // ============ 常量 ============
 const LANGUAGES: Language[] = [
   { code: "zh", name: "中" },
@@ -64,6 +69,7 @@ const Toolbar: React.FC<{
   onSetTone: (tone: Tone) => void;
   isPinned: boolean;
   onTogglePin: () => void;
+  activeEngine: string;
 }> = ({
   sourceLang,
   targetLang,
@@ -74,6 +80,7 @@ const Toolbar: React.FC<{
   onSetTone,
   isPinned,
   onTogglePin,
+  activeEngine,
 }) => {
   const [showSourceMenu, setShowSourceMenu] = useState(false);
   const [showTargetMenu, setShowTargetMenu] = useState(false);
@@ -179,8 +186,10 @@ const Toolbar: React.FC<{
         </div>
       </div>
 
-      {/* 语气选择胶囊 */}
+      {/* 语气选择胶囊 (Wrapped in div for alignment) */}
       <div className="flex items-center space-x-1.5">
+        {/* 语气选择胶囊 - 仅当 activateEngine 不为 tencent 时显示 */}
+        {activeEngine !== "tencent" && (
         <div className="relative group/tone">
           <button
             className={`flex items-center space-x-1 px-1.5 py-1 rounded-lg border border-white/20 dark:border-slate-700/50 bg-white/10 dark:bg-slate-800/20 backdrop-blur-md transition-all hover:bg-white/20 dark:hover:bg-slate-700/40 active:scale-95`}
@@ -236,6 +245,7 @@ const Toolbar: React.FC<{
             </div>
           </div>
         </div>
+        )}
 
         {/* Pin 按钮 */}
         <button
@@ -269,6 +279,21 @@ function Translator() {
   const [currentTone, setCurrentTone] = useState<Tone>("Casual");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [activeEngine, setActiveEngine] = useState("zhipu");
+
+  const updateSettings = useCallback(async () => {
+    try {
+        const settings = await invoke<AppSettings>("get_app_settings");
+        setActiveEngine(settings.active_engine ?? "zhipu");
+    } catch (error) {
+        console.error("Failed to fetch settings:", error);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    updateSettings();
+  }, [updateSettings]);
 
   console.log(
     `[Translator] Rendering with state: inputTextLen=${
@@ -443,6 +468,7 @@ function Translator() {
   useEffect(() => {
     const unlisten = listen("global-shortcut-triggered", async () => {
       try {
+        await updateSettings(); // Refresh settings when shortcut triggered
         await invoke("show_translator_window");
         setTimeout(() => inputRef.current?.focus(), 100);
       } catch (error) {
@@ -506,6 +532,7 @@ function Translator() {
           onSetTone={setCurrentTone}
           isPinned={isPinned}
           onTogglePin={handleTogglePin}
+          activeEngine={activeEngine}
         />
 
         {/* ========== 内容区域 ========== */}

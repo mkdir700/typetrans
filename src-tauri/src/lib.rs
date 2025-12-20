@@ -1,6 +1,10 @@
 use arboard::Clipboard;
+use chrono::Utc;
+use hex;
+use hmac::{Hmac, Mac};
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
@@ -44,10 +48,26 @@ struct GlmAssistantMessage {
     content: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(default)]
 struct AppSettings {
     zhipu_api_key: Option<String>,
+    tencent_secret_id: Option<String>,
+    tencent_secret_key: Option<String>,
+    tencent_region: Option<String>,
+    active_engine: String, // "zhipu" or "tencent"
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            zhipu_api_key: None,
+            tencent_secret_id: None,
+            tencent_secret_key: None,
+            tencent_region: Some("ap-guangzhou".to_string()),
+            active_engine: "zhipu".to_string(),
+        }
+    }
 }
 
 fn app_settings_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -101,6 +121,51 @@ async fn set_zhipu_api_key(app: AppHandle, api_key: String) -> Result<(), String
     write_app_settings(&app, &settings).await
 }
 
+#[tauri::command]
+async fn set_tencent_config(
+    app: AppHandle,
+    secret_id: String,
+    secret_key: String,
+    region: String,
+) -> Result<(), String> {
+    let mut settings = read_app_settings(&app).await.unwrap_or_default();
+
+    let secret_id = secret_id.trim().to_string();
+    settings.tencent_secret_id = if secret_id.is_empty() {
+        None
+    } else {
+        Some(secret_id)
+    };
+
+    let secret_key = secret_key.trim().to_string();
+    settings.tencent_secret_key = if secret_key.is_empty() {
+        None
+    } else {
+        Some(secret_key)
+    };
+
+    let region = region.trim().to_string();
+    settings.tencent_region = if region.is_empty() {
+        Some("ap-guangzhou".to_string())
+    } else {
+        Some(region)
+    };
+
+    write_app_settings(&app, &settings).await
+}
+
+#[tauri::command]
+async fn set_active_engine(app: AppHandle, engine: String) -> Result<(), String> {
+    let mut settings = read_app_settings(&app).await.unwrap_or_default();
+    match engine.as_str() {
+        "zhipu" | "tencent" => {
+            settings.active_engine = engine;
+            write_app_settings(&app, &settings).await
+        }
+        _ => Err("Invalid engine name".to_string()),
+    }
+}
+
 fn normalize_target_language(target_lang: &str) -> String {
     let normalized = target_lang.trim().to_ascii_uppercase();
     match normalized.as_str() {
@@ -124,7 +189,137 @@ fn strip_code_fences(text: &str) -> String {
     trimmed.to_string()
 }
 
-// Get translation from Zhipu AI (GLM) API
+// --- Tencent Cloud Implementation ---
+
+#[derive(Serialize)]
+#[allow(non_snake_case)]
+struct TencentRequest<'a> {
+    SourceText: &'a str,
+    Source: &'a str,
+    Target: &'a str,
+    ProjectId: i64,
+}
+
+#[derive(Deserialize)]
+struct TencentResponse {
+    #[serde(rename = "Response")]
+    response: TencentResponseData,
+}
+
+#[derive(Deserialize)]
+struct TencentResponseData {
+    #[serde(rename = "TargetText")]
+    target_text: String,
+    #[serde(rename = "Error")]
+    error: Option<TencentError>,
+}
+
+#[derive(Deserialize)]
+struct TencentError {
+    #[serde(rename = "Code")]
+    code: String,
+    #[serde(rename = "Message")]
+    message: String,
+}
+
+async fn translate_tencent(
+    settings: AppSettings,
+    text: String,
+    target_lang: String,
+) -> Result<String, String> {
+    let secret_id = settings.tencent_secret_id.ok_or("未配置腾讯云 SecretId")?;
+    let secret_key = settings
+        .tencent_secret_key
+        .ok_or("未配置腾讯云 SecretKey")?;
+    let region = settings
+        .tencent_region
+        .unwrap_or_else(|| "ap-guangzhou".to_string());
+
+    let host = "tmt.tencentcloudapi.com";
+    let service = "tmt";
+    let action = "TextTranslate";
+    let version = "2018-03-21";
+    let timestamp = Utc::now().timestamp();
+    let date = Utc::now().format("%Y-%m-%d").to_string();
+
+    let target = match target_lang.to_ascii_lowercase().as_str() {
+        "zh" | "zh-cn" => "zh",
+        "en" | "en-us" => "en",
+        "ja" | "jp" => "ja",
+        "ko" | "kr" => "ko",
+        _ => &target_lang,
+    };
+
+    let payload = TencentRequest {
+        SourceText: &text,
+        Source: "auto",
+        Target: target,
+        ProjectId: 0,
+    };
+    let payload_str = serde_json::to_string(&payload).map_err(|e| e.to_string())?;
+
+    // Signature V3
+    let canonical_headers = format!("content-type:application/json\nhost:{}\n", host);
+    let signed_headers = "content-type;host";
+    let hashed_request_payload = hex::encode(Sha256::digest(payload_str.as_bytes()));
+    let canonical_request = format!(
+        "POST\n/\n\n{}\n{}\n{}",
+        canonical_headers, signed_headers, hashed_request_payload
+    );
+
+    let credential_scope = format!("{}/{}/tc3_request", date, service);
+    let hashed_canonical_request = hex::encode(Sha256::digest(canonical_request.as_bytes()));
+    let string_to_sign = format!(
+        "TC3-HMAC-SHA256\n{}\n{}\n{}",
+        timestamp, credential_scope, hashed_canonical_request
+    );
+
+    let k_secret = format!("TC3{}", secret_key);
+    let k_date = hmac_sha256(k_secret.as_bytes(), date.as_bytes());
+    let k_service = hmac_sha256(&k_date, service.as_bytes());
+    let k_signing = hmac_sha256(&k_service, "tc3_request".as_bytes());
+    let signature = hex::encode(hmac_sha256(&k_signing, string_to_sign.as_bytes()));
+
+    let authorization = format!(
+        "TC3-HMAC-SHA256 Credential={}/{}, SignedHeaders={}, Signature={}",
+        secret_id, credential_scope, signed_headers, signature
+    );
+
+    let client = reqwest::Client::new();
+    let res = client
+        .post(format!("https://{}", host))
+        .header("Content-Type", "application/json")
+        .header("Authorization", authorization)
+        .header("Host", host)
+        .header("X-TC-Action", action)
+        .header("X-TC-Version", version)
+        .header("X-TC-Timestamp", timestamp.to_string())
+        .header("X-TC-Region", region)
+        .body(payload_str)
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+
+    let resp_data: TencentResponse = res
+        .json()
+        .await
+        .map_err(|e| format!("Parse error: {}", e))?;
+
+    if let Some(err) = resp_data.response.error {
+        return Err(format!("Tencent API Error ({}): {}", err.code, err.message));
+    }
+
+    Ok(resp_data.response.target_text)
+}
+
+fn hmac_sha256(key: &[u8], data: &[u8]) -> Vec<u8> {
+    type HmacSha256 = Hmac<Sha256>;
+    let mut mac = HmacSha256::new_from_slice(key).expect("HMAC can take any key length");
+    mac.update(data);
+    mac.finalize().into_bytes().to_vec()
+}
+
+// Get translation from Active Engine
 #[tauri::command]
 async fn get_translation(
     app: AppHandle,
@@ -132,24 +327,29 @@ async fn get_translation(
     target_lang: String,
     tone: String,
 ) -> Result<String, String> {
+    let settings = read_app_settings(&app).await.unwrap_or_default();
+
+    if settings.active_engine == "tencent" {
+        return translate_tencent(settings, text, target_lang).await;
+    }
+
+    // Default to Zhipu (GLM)
     info!(
-        "[get_translation] Called with text length: {}, target_lang: {}, tone: {}",
+        "[get_translation] Using Zhipu AI. Text length: {}, target: {}, tone: {}",
         text.len(),
         target_lang,
         tone
     );
 
-    let settings = read_app_settings(&app).await.unwrap_or_default();
     let api_key = settings
         .zhipu_api_key
         .or_else(|| std::env::var("ZHIPU_API_KEY").ok())
         .ok_or_else(|| {
             error!("[get_translation] No API key configured");
-            "未配置智谱 AI API Key：请在设置页填写或设置环境变量 ZHIPU_API_KEY".to_string()
+            "未配置智谱 AI API Key：请在设置页配置".to_string()
         })?;
 
     let target = normalize_target_language(&target_lang);
-    debug!("[get_translation] Normalized target language: {}", target);
 
     // Adjust the instruction based on the tone
     let tone_instruction = match tone.as_str() {
@@ -165,8 +365,6 @@ async fn get_translation(
     let system_prompt = format!(
         "You are a professional translation engine. Translate the provided text into {target}. {tone_instruction} Requirements: Output ONLY the translated text without explanations, quotes, Markdown, numbering, or extra content. Preserve original line breaks and formatting as much as possible.",
     );
-
-    debug!("[get_translation] System prompt: {}", system_prompt);
 
     let payload = GlmChatCompletionRequest {
         model: "glm-4.6".to_string(),
@@ -189,7 +387,6 @@ async fn get_translation(
         },
     };
 
-    info!("[get_translation] Sending request to GLM API");
     let client = reqwest::Client::new();
     let res = client
         .post("https://open.bigmodel.cn/api/paas/v4/chat/completions")
@@ -197,38 +394,26 @@ async fn get_translation(
         .json(&payload)
         .send()
         .await
-        .map_err(|e| {
-            error!("[get_translation] Request failed: {}", e);
-            format!("请求失败: {}", e)
-        })?;
+        .map_err(|e| format!("请求失败: {}", e))?;
 
     if !res.status().is_success() {
         let status = res.status();
         let body = res.text().await.unwrap_or_default();
-        error!("[get_translation] API error ({}): {}", status, body);
         return Err(format!("接口返回错误 ({}): {}", status, body));
     }
 
-    let data: GlmChatCompletionResponse = res.json().await.map_err(|e| {
-        error!("[get_translation] Failed to parse response: {}", e);
-        format!("解析响应失败: {}", e)
-    })?;
+    let data: GlmChatCompletionResponse = res
+        .json()
+        .await
+        .map_err(|e| format!("解析响应失败: {}", e))?;
 
     let content = data
         .choices
         .first()
         .map(|c| c.message.content.clone())
-        .unwrap_or_else(|| {
-            warn!("[get_translation] No content returned from API");
-            "翻译失败：未返回内容".to_string()
-        });
+        .unwrap_or_else(|| "翻译失败：未返回内容".to_string());
 
-    let result = strip_code_fences(&content);
-    info!(
-        "[get_translation] Translation successful, result length: {}",
-        result.len()
-    );
-    Ok(result)
+    Ok(strip_code_fences(&content))
 }
 
 // Get selected text from clipboard
@@ -399,6 +584,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_app_settings,
             set_zhipu_api_key,
+            set_tencent_config,
+            set_active_engine,
             get_translation,
             get_selected_text,
             copy_to_clipboard,

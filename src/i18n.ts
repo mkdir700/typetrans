@@ -46,11 +46,24 @@ i18n
                         },
                     },
                     settings: {
-                        title: 'Zhipu AI (GLM) Config',
+                        title: 'Translation Settings',
+                        engine: {
+                            label: 'Translation Engine',
+                            zhipu: 'Zhipu AI (GLM)',
+                            tencent: 'Tencent Cloud (TMT)',
+                        },
                         apiKey: {
                             label: 'API Key',
                             placeholder: 'Enter your Zhipu AI API Key',
                             note: 'API Key is saved locally and only used for translation API.',
+                        },
+                        tencent: {
+                            secretId: 'Secret ID',
+                            secretKey: 'Secret Key',
+                            region: 'Region',
+                            placeholderId: 'Enter Tencent Cloud Secret ID',
+                            placeholderKey: 'Enter Tencent Cloud Secret Key',
+                            note: 'Credentials are saved locally and used for TMT API.',
                         },
                         status: {
                             loading: 'Reading configuration...',
@@ -103,8 +116,8 @@ i18n
                         },
                     },
                     modelSettings: {
-                        title: 'Model Configuration',
-                        description: 'Configure AI translation model and API settings.',
+                        title: 'Translation Settings',
+                        description: 'Configure translation engine and API settings.',
                     },
                     shortcutSettings: {
                         title: 'Shortcut Settings',
@@ -149,11 +162,24 @@ i18n
                         },
                     },
                     settings: {
-                        title: '智谱 AI (GLM) 配置',
+                        title: '翻译设置',
+                        engine: {
+                            label: '翻译引擎',
+                            zhipu: '智谱 AI (GLM)',
+                            tencent: '腾讯云 (TMT)',
+                        },
                         apiKey: {
                             label: 'API Key',
                             placeholder: '请输入你的智谱 AI API Key',
                             note: 'API Key 将保存在本机配置文件中，仅用于调用智谱 AI 接口。',
+                        },
+                        tencent: {
+                            secretId: 'Secret ID',
+                            secretKey: 'Secret Key',
+                            region: '地域',
+                            placeholderId: '请输入腾讯云 Secret ID',
+                            placeholderKey: '请输入腾讯云 Secret Key',
+                            note: '密钥将保存在本机配置文件中，仅用于调用机器翻译接口。',
                         },
                         status: {
                             loading: '正在读取配置...',
@@ -206,8 +232,8 @@ i18n
                         },
                     },
                     modelSettings: {
-                        title: '模型配置',
-                        description: '配置 AI 翻译模型和 API 设置。',
+                        title: '翻译设置',
+                        description: '配置翻译引擎和 API 设置。',
                     },
                     shortcutSettings: {
                         title: '快捷键设置',
