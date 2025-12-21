@@ -307,6 +307,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "block"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -597,6 +603,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "cocoa"
+version = "0.26.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad36507aeb7e16159dfe68db81ccc27571c3ccd4b76fb2fb72fc59e7a4b1b64c"
+dependencies = [
+ "bitflags 2.10.0",
+ "block",
+ "cocoa-foundation",
+ "core-foundation 0.10.1",
+ "core-graphics 0.24.0",
+ "foreign-types 0.5.0",
+ "libc",
+ "objc",
+]
+
+[[package]]
+name = "cocoa-foundation"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81411967c50ee9a1fc11365f8c585f863a22a9697c89239c452292c40ba79b0d"
+dependencies = [
+ "bitflags 2.10.0",
+ "block",
+ "core-foundation 0.10.1",
+ "core-graphics-types 0.2.0",
+ "objc",
+]
+
+[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -659,14 +694,51 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "core-graphics"
+version = "0.22.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2581bbab3b8ffc6fcbd550bf46c355135d16e9ff2a6ea032ad6b9bf1d7efe4fb"
+dependencies = [
+ "bitflags 1.3.2",
+ "core-foundation 0.9.4",
+ "core-graphics-types 0.1.3",
+ "foreign-types 0.3.2",
+ "libc",
+]
+
+[[package]]
+name = "core-graphics"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fa95a34622365fa5bbf40b20b75dba8dfa8c94c734aea8ac9a5ca38af14316f1"
 dependencies = [
  "bitflags 2.10.0",
  "core-foundation 0.10.1",
- "core-graphics-types",
+ "core-graphics-types 0.2.0",
  "foreign-types 0.5.0",
+ "libc",
+]
+
+[[package]]
+name = "core-graphics"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "064badf302c3194842cf2c5d61f56cc88e54a759313879cdf03abdd27d0c3b97"
+dependencies = [
+ "bitflags 2.10.0",
+ "core-foundation 0.10.1",
+ "core-graphics-types 0.2.0",
+ "foreign-types 0.5.0",
+ "libc",
+]
+
+[[package]]
+name = "core-graphics-types"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45390e6114f68f718cc7a830514a96f903cccd70d02a8f6d9f643ac4ba45afaf"
+dependencies = [
+ "bitflags 1.3.2",
+ "core-foundation 0.9.4",
  "libc",
 ]
 
@@ -977,6 +1049,27 @@ name = "endi"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66b7e2430c6dff6a955451e2cfc438f09cea1965a9d6f87f7e3b90decc014099"
+
+[[package]]
+name = "enigo"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71c6c56e50f7acae2906a0dcbb34529ca647e40421119ad5d12e7f8ba6e50010"
+dependencies = [
+ "core-foundation 0.10.1",
+ "core-graphics 0.25.0",
+ "foreign-types-shared 0.3.1",
+ "libc",
+ "log",
+ "nom",
+ "objc2 0.6.3",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "windows",
+ "x11rb",
+ "xkbcommon",
+ "xkeysym",
+]
 
 [[package]]
 name = "enumflags2"
@@ -2260,6 +2353,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "malloc_buf"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "markup5ever"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2297,6 +2399,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
+name = "memmap2"
+version = "0.9.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "744133e4a0e0a658e1374cf3bf8e415c4052a15a111acd372764c55b4177d490"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "memoffset"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2330,6 +2441,17 @@ dependencies = [
  "libc",
  "wasi 0.11.1+wasi-snapshot-preview1",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "mouse_position"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "824feb0675ad2ffda7b1da534f394c5779fb39d123b5f376a221d50fad54b3c2"
+dependencies = [
+ "core-graphics 0.22.3",
+ "winapi",
+ "x11-dl",
 ]
 
 [[package]]
@@ -2436,6 +2558,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72ef4a56884ca558e5ddb05a1d1e7e1bfd9a68d9ed024c21704cc98872dae1bb"
 
 [[package]]
+name = "nom"
+version = "8.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df9761775871bdef83bee530e60050f7e54b1105350d6884eb0fb4f46c2f9405"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "num-conv"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2479,6 +2610,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "objc"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "915b1b472bc21c53464d6c8461c9d3af805ba1ef837e1cac254428f4a77177b1"
+dependencies = [
+ "malloc_buf",
 ]
 
 [[package]]
@@ -4210,7 +4350,7 @@ dependencies = [
  "bitflags 2.10.0",
  "block2 0.6.2",
  "core-foundation 0.10.1",
- "core-graphics",
+ "core-graphics 0.24.0",
  "crossbeam-channel",
  "dispatch",
  "dlopen2",
@@ -4985,9 +5125,13 @@ version = "0.1.0"
 dependencies = [
  "arboard",
  "chrono",
+ "cocoa",
+ "enigo",
  "hex",
  "hmac",
  "log",
+ "mouse_position",
+ "objc",
  "reqwest",
  "serde",
  "serde_json",
@@ -5967,6 +6111,17 @@ name = "x11rb-protocol"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea6fc2961e4ef194dcbfe56bb845534d0dc8098940c7e5c012a258bfec6701bd"
+
+[[package]]
+name = "xkbcommon"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7a974f48060a14e95705c01f24ad9c3345022f4d97441b8a36beb7ed5c4a02d"
+dependencies = [
+ "libc",
+ "memmap2",
+ "xkeysym",
+]
 
 [[package]]
 name = "xkeysym"

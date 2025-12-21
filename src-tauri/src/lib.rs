@@ -1,11 +1,14 @@
 use arboard::Clipboard;
 use chrono::Utc;
+use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use hex;
 use hmac::{Hmac, Mac};
 use log::{debug, error, info, warn};
+use mouse_position::mouse_position::Mouse;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
+use std::{thread, time};
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
@@ -451,15 +454,189 @@ async fn copy_to_clipboard(text: String) -> Result<(), String> {
     clipboard.set_text(text).map_err(|e| e.to_string())
 }
 
-// Show translator window
+// Show translator window at cursor position
 #[tauri::command]
 async fn show_translator_window(app: AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window("translator")
         .ok_or("Translator window not found")?;
 
+    // Get mouse position
+    let position = Mouse::get_mouse_position();
+    let (mut mouse_x, mut mouse_y) = match position {
+        Mouse::Position { x, y } => (x, y),
+        Mouse::Error => {
+            warn!("Failed to get mouse position, using default");
+            (0, 0) // Default fallback, though ideally center or cached
+        }
+    };
+
+    // Get monitor info to handle boundaries
+    if let Some(monitor) = window.current_monitor().map_err(|e| e.to_string())? {
+        let screen_size = monitor.size();
+        let screen_pos = monitor.position();
+        let _scale_factor = monitor.scale_factor();
+
+        // Window size (physical)
+        let window_size = window.outer_size().map_err(|e| e.to_string())?;
+
+        // Logical to physical might be needed if mouse is in logical?
+        // Mouse::get_mouse_position usually returns physical coordinates on screen?
+        // It depends on the OS. On macOS, it's often logical points or physical pixels.
+        // We'll assume physical for now regarding collision with monitor bounds,
+        // but `window.set_position` takes PhysicalPosition.
+
+        let win_w = window_size.width as i32;
+        let win_h = window_size.height as i32;
+        let screen_w = screen_size.width as i32;
+        let screen_h = screen_size.height as i32;
+        let screen_x = screen_pos.x;
+        let screen_y = screen_pos.y;
+
+        // Add a small offset so it doesn't appear exactly under the cursor (blocking view)
+        mouse_x += 10;
+        mouse_y += 10;
+
+        // Boundary checks
+        // Right edge
+        if mouse_x + win_w > screen_x + screen_w {
+            mouse_x = screen_x + screen_w - win_w - 10;
+        }
+        // Bottom edge
+        if mouse_y + win_h > screen_y + screen_h {
+            mouse_y = mouse_y - win_h - 20; // Show above cursor if no space below
+        }
+        // Left edge (unlikely with mouse_x + 10, but good practice)
+        if mouse_x < screen_x {
+            mouse_x = screen_x + 10;
+        }
+        // Top edge
+        if mouse_y < screen_y {
+            mouse_y = screen_y + 10;
+        }
+    }
+
+    window
+        .set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+            x: mouse_x,
+            y: mouse_y,
+        }))
+        .map_err(|e| e.to_string())?;
+
     window.show().map_err(|e| e.to_string())?;
     window.set_focus().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+/// Hide the entire application on macOS using NSApplication hide:
+/// This properly returns focus to the previously active application.
+#[cfg(target_os = "macos")]
+fn hide_application() {
+    use objc::{class, msg_send, sel, sel_impl};
+
+    unsafe {
+        let ns_app: *mut objc::runtime::Object = msg_send![class!(NSApplication), sharedApplication];
+        let _: () = msg_send![ns_app, hide: std::ptr::null::<objc::runtime::Object>()];
+    }
+}
+
+// Paste translation to the previous active window
+#[tauri::command]
+async fn paste_translation(app: AppHandle, text: String) -> Result<(), String> {
+    // 1. Copy text to clipboard
+    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard.set_text(text).map_err(|e| e.to_string())?;
+
+    // 2. Hide translator window
+    if let Some(translator_window) = app.get_webview_window("translator") {
+        let _ = translator_window.hide();
+    }
+
+    // 3. On macOS, use NSApp hide to properly return focus to previous app
+    #[cfg(target_os = "macos")]
+    hide_application();
+
+    // On other platforms, just hide the main window
+    #[cfg(not(target_os = "macos"))]
+    if let Some(main_window) = app.get_webview_window("main") {
+        let _ = main_window.hide();
+    }
+
+    // Use std::thread::spawn instead of tokio spawn to avoid issues with
+    // blocking operations (Enigo) in async context
+    std::thread::spawn(move || {
+        // Wait for app to hide and focus to switch to previous app
+        thread::sleep(time::Duration::from_millis(300));
+
+        // 4. Simulate Cmd+V
+        match Enigo::new(&Settings::default()) {
+            Ok(mut enigo) => {
+                info!("Starting paste sequence");
+                #[cfg(target_os = "macos")]
+                {
+                    // macOS keycode for 'V' is 9
+                    const V_KEYCODE: u16 = 9;
+
+                    debug!("macOS: Pressing Cmd");
+                    // Cmd Press
+                    if let Err(e) = enigo.key(Key::Meta, Direction::Press) {
+                        error!("Failed to press Meta: {:?}", e);
+                        return;
+                    }
+                    thread::sleep(time::Duration::from_millis(50));
+
+                    debug!("macOS: Pressing V (raw keycode {})", V_KEYCODE);
+                    // V Press using raw keycode
+                    if let Err(e) = enigo.raw(V_KEYCODE, Direction::Press) {
+                        error!("Failed to press V: {:?}", e);
+                        // Try to release Meta before returning
+                        let _ = enigo.key(Key::Meta, Direction::Release);
+                        return;
+                    }
+                    thread::sleep(time::Duration::from_millis(50));
+
+                    debug!("macOS: Releasing V (raw keycode {})", V_KEYCODE);
+                    // V Release using raw keycode
+                    if let Err(e) = enigo.raw(V_KEYCODE, Direction::Release) {
+                        error!("Failed to release V: {:?}", e);
+                    }
+                    thread::sleep(time::Duration::from_millis(50));
+
+                    debug!("macOS: Releasing Cmd");
+                    // Cmd Release
+                    if let Err(e) = enigo.key(Key::Meta, Direction::Release) {
+                        error!("Failed to release Meta: {:?}", e);
+                    }
+                }
+
+                #[cfg(not(target_os = "macos"))]
+                {
+                    debug!("Non-macOS: Pressing Control");
+                    if let Err(e) = enigo.key(Key::Control, Direction::Press) {
+                        error!("Failed to press Control: {:?}", e);
+                        return;
+                    }
+                    thread::sleep(time::Duration::from_millis(50));
+
+                    debug!("Non-macOS: Clicking V");
+                    if let Err(e) = enigo.key(Key::Unicode('v'), Direction::Click) {
+                        error!("Failed to click V: {:?}", e);
+                    }
+                    thread::sleep(time::Duration::from_millis(50));
+
+                    debug!("Non-macOS: Releasing Control");
+                    if let Err(e) = enigo.key(Key::Control, Direction::Release) {
+                        error!("Failed to release Control: {:?}", e);
+                    }
+                }
+                info!("Paste sequence completed");
+            }
+            Err(e) => {
+                error!("Failed to initialize Enigo for pasting: {}. Make sure Accessibility permissions are granted.", e);
+            }
+        }
+    });
 
     Ok(())
 }
@@ -593,7 +770,8 @@ pub fn run() {
             hide_translator_window,
             toggle_translator_pin,
             show_settings_window,
-            hide_settings_window
+            hide_settings_window,
+            paste_translation
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

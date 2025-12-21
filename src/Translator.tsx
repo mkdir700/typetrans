@@ -496,6 +496,18 @@ function Translator() {
   // ESC key to close window
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Paste translation with Alt+Enter
+      if (e.altKey && e.key === "Enter") {
+        e.preventDefault();
+        const textToPaste = translatedText || inputText;
+        if (!textToPaste) return;
+        
+        invoke("paste_translation", { text: textToPaste }).catch((err: unknown) =>
+          console.error("Error pasting translation:", err)
+        );
+        return;
+      }
+
       if (e.key === "Escape") {
         invoke("hide_translator_window").catch((err: unknown) =>
           console.error("Error hiding window:", err)
@@ -505,7 +517,7 @@ function Translator() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [translatedText, inputText]);
 
   return (
     // 圆角窗口容器 - 使用原生 vibrancy 模糊效果
