@@ -531,16 +531,25 @@ async fn show_translator_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Hide the entire application on macOS using NSApplication hide:
-/// This properly returns focus to the previously active application.
-#[cfg(target_os = "macos")]
-fn hide_application() {
-    use objc::{class, msg_send, sel, sel_impl};
+/// Hide the application to return focus to the previous app
+/// On macOS, uses native `NSApplication hide:`
+/// On other platforms, hides the main window to ensure focus yields
+fn hide_application(_app: &AppHandle) {
+    #[cfg(target_os = "macos")]
+    {
+        use objc::{class, msg_send, sel, sel_impl};
+        unsafe {
+            let ns_app: *mut objc::runtime::Object =
+                msg_send![class!(NSApplication), sharedApplication];
+            let _: () = msg_send![ns_app, hide: std::ptr::null::<objc::runtime::Object>()];
+        }
+    }
 
-    unsafe {
-        let ns_app: *mut objc::runtime::Object =
-            msg_send![class!(NSApplication), sharedApplication];
-        let _: () = msg_send![ns_app, hide: std::ptr::null::<objc::runtime::Object>()];
+    #[cfg(not(target_os = "macos"))]
+    {
+        if let Some(window) = _app.get_webview_window("main") {
+            let _ = window.hide();
+        }
     }
 }
 
@@ -556,15 +565,8 @@ async fn paste_translation(app: AppHandle, text: String) -> Result<(), String> {
         let _ = translator_window.hide();
     }
 
-    // 3. On macOS, use NSApp hide to properly return focus to previous app
-    #[cfg(target_os = "macos")]
-    hide_application();
-
-    // On other platforms, just hide the main window
-    #[cfg(not(target_os = "macos"))]
-    if let Some(main_window) = app.get_webview_window("main") {
-        let _ = main_window.hide();
-    }
+    // 3. Hide application properly to return focus
+    hide_application(&app);
 
     // Use std::thread::spawn instead of tokio spawn to avoid issues with
     // blocking operations (Enigo) in async context
@@ -652,6 +654,7 @@ async fn hide_translator_window(app: AppHandle) -> Result<(), String> {
         .ok_or("Translator window not found")?;
 
     window.hide().map_err(|e| e.to_string())?;
+    hide_application(&app);
 
     Ok(())
 }
