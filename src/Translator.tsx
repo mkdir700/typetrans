@@ -8,7 +8,6 @@ import {
   ArrowRightLeft, 
   Sparkles, 
   Check, 
-  Languages 
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "./lib/utils";
@@ -247,7 +246,6 @@ function Translator() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs font-semibold gap-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10">
                   <span className="uppercase">{sourceLang.code}</span>
-                  <Languages size={12} className="opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[120px]">
@@ -277,7 +275,6 @@ function Translator() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs font-semibold gap-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10">
                   <span className="uppercase">{targetLang.code}</span>
-                  <Languages size={12} className="opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[120px]">
