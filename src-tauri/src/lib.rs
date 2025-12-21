@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use std::{thread, time};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
@@ -536,7 +538,8 @@ fn hide_application() {
     use objc::{class, msg_send, sel, sel_impl};
 
     unsafe {
-        let ns_app: *mut objc::runtime::Object = msg_send![class!(NSApplication), sharedApplication];
+        let ns_app: *mut objc::runtime::Object =
+            msg_send![class!(NSApplication), sharedApplication];
         let _: () = msg_send![ns_app, hide: std::ptr::null::<objc::runtime::Object>()];
     }
 }
@@ -692,6 +695,19 @@ async fn hide_settings_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+// Show main window
+#[tauri::command]
+async fn show_main_window(app: AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or("Main window not found")?;
+
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -725,6 +741,42 @@ pub fn run() {
                 apply_vibrancy(&window, NSVisualEffectMaterial::HudWindow, None, Some(16.0))
                     .expect("Failed to apply vibrancy");
             }
+
+            // Setup System Tray
+            let show_i = MenuItem::with_id(app, "show", "Show Main Window", true, None::<&str>).unwrap();
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
+            let menu = Menu::with_items(app, &[&show_i, &quit_i]).unwrap();
+
+            let _tray = TrayIconBuilder::new()
+                .menu(&menu)
+                .icon(app.default_window_icon().unwrap().clone())
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| match event {
+                    TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        ..
+                    } => {
+                         let app = tray.app_handle();
+                         if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                         }
+                    }
+                    _ => {}
+                })
+                .build(app)
+                .map_err(|e| format!("Failed to build tray icon: {}", e))?;
 
             // Register global shortcut Alt+T
             let shortcut = "Alt+T";
@@ -771,7 +823,8 @@ pub fn run() {
             toggle_translator_pin,
             show_settings_window,
             hide_settings_window,
-            paste_translation
+            paste_translation,
+            show_main_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

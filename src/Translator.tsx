@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Pin, Check } from "lucide-react";
+import { Pin, Check, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // ============ 类型定义 ============
@@ -70,6 +70,7 @@ const Toolbar: React.FC<{
   isPinned: boolean;
   onTogglePin: () => void;
   activeEngine: string;
+  onOpenSettings: () => void;
 }> = ({
   sourceLang,
   targetLang,
@@ -81,6 +82,7 @@ const Toolbar: React.FC<{
   isPinned,
   onTogglePin,
   activeEngine,
+  onOpenSettings,
 }) => {
   const [showSourceMenu, setShowSourceMenu] = useState(false);
   const [showTargetMenu, setShowTargetMenu] = useState(false);
@@ -248,7 +250,7 @@ const Toolbar: React.FC<{
         )}
 
         {/* Pin 按钮 */}
-        <button
+      <button
           onClick={onTogglePin}
           className={`transition-colors p-1 rounded-lg hover:bg-slate-500/10 dark:hover:bg-slate-400/10 ${
             isPinned
@@ -258,10 +260,19 @@ const Toolbar: React.FC<{
           aria-label="Toggle Pin"
         >
           <Pin
-            size={12}
+            size={14}
             strokeWidth={1.8}
             className={isPinned ? "fill-current" : ""}
           />
+        </button>
+
+        {/* Settings 按钮 */}
+        <button
+          onClick={onOpenSettings}
+          className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors p-1 rounded-lg hover:bg-slate-500/10 dark:hover:bg-slate-400/10"
+          aria-label="Open Settings"
+        >
+          <Settings size={14} strokeWidth={1.8} />
         </button>
       </div>
     </div>
@@ -545,6 +556,7 @@ function Translator() {
           isPinned={isPinned}
           onTogglePin={handleTogglePin}
           activeEngine={activeEngine}
+          onOpenSettings={() => invoke("show_main_window")}
         />
 
         {/* ========== 内容区域 ========== */}
