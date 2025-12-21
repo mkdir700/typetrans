@@ -4,7 +4,7 @@ use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use hex;
 use hmac::{Hmac, Mac};
 use log::{debug, error, info, warn};
-use mouse_position::mouse_position::Mouse;
+// use mouse_position::mouse_position::Mouse;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
@@ -463,6 +463,21 @@ async fn show_translator_window(app: AppHandle) -> Result<(), String> {
         .get_webview_window("translator")
         .ok_or("Translator window not found")?;
 
+    // Calculate center position
+    let mut final_x = 0;
+    let mut final_y = 0;
+
+    if let Some(monitor) = window.current_monitor().map_err(|e| e.to_string())? {
+        let screen_size = monitor.size();
+        let screen_pos = monitor.position();
+        let window_size = window.outer_size().map_err(|e| e.to_string())?;
+
+        final_x = screen_pos.x + (screen_size.width as i32 - window_size.width as i32) / 2;
+        final_y = screen_pos.y + (screen_size.height as i32 - window_size.height as i32) / 2;
+    }
+
+    /*
+    // PREVIOUS LOGIC (Preserved): Show near cursor
     // Get mouse position
     let position = Mouse::get_mouse_position();
     let (mut mouse_x, mut mouse_y) = match position {
@@ -517,11 +532,12 @@ async fn show_translator_window(app: AppHandle) -> Result<(), String> {
             mouse_y = screen_y + 10;
         }
     }
+    */
 
     window
         .set_position(tauri::Position::Physical(tauri::PhysicalPosition {
-            x: mouse_x,
-            y: mouse_y,
+            x: final_x,
+            y: final_y,
         }))
         .map_err(|e| e.to_string())?;
 
