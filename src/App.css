@@ -199,3 +199,22 @@ body {
 .animate-fade-in-up {
   animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes star-explode {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0);
+  }
+}
+
+.star-particle {
+  position: absolute;
+  pointer-events: none;
+  animation: star-explode 0.6s ease-out forwards;
+  border-radius: 50%;
+}

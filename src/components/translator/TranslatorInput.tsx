@@ -1,7 +1,9 @@
-import { forwardRef, useEffect, useCallback } from "react";
+import { forwardRef, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../lib/utils";
 import { Textarea } from "../ui/textarea";
+import { getCaretCoordinates } from "../../lib/caret";
+import { StarrySky, StarrySkyRef } from "../effects/StarrySky";
 
 interface TranslatorInputProps {
   inputText: string;
@@ -25,20 +27,43 @@ export const TranslatorInput = forwardRef<HTMLTextAreaElement, TranslatorInputPr
         adjustTextareaHeight();
     }, [inputText, adjustTextareaHeight]);
 
+    const starryRef = useRef<StarrySkyRef>(null);
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInputText(e.target.value);
+
+      // Trigger particle effect
+      if (starryRef.current) {
+        // We use a small timeout to ensure the caret position is updated after the change
+        requestAnimationFrame(() => {
+          const { top, left } = getCaretCoordinates(e.target, e.target.selectionEnd);
+          
+          // Adjust for scroll position
+          const x = left - e.target.scrollLeft;
+          const y = top - e.target.scrollTop;
+          
+          starryRef.current?.explode(x, y);
+        });
+      }
+    };
+
     return (
-      <Textarea 
-        ref={ref}
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        placeholder={t("translator.placeholder", "Type to translate...")}
-        spellCheck={false}
-        className={cn(
-          "min-h-[40px] w-full resize-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-1 bg-transparent",
-          "text-lg font-medium leading-relaxed placeholder:text-muted-foreground/40",
-          "custom-scrollbar"
-        )}
-        autoFocus
-      />
+      <div className="relative w-full group">
+        <StarrySky ref={starryRef} />
+        <Textarea 
+          ref={ref}
+          value={inputText}
+          onChange={handleChange}
+          placeholder={t("translator.placeholder", "Type to translate...")}
+          spellCheck={false}
+          className={cn(
+            "min-h-[40px] w-full resize-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-1 bg-transparent",
+            "text-lg font-medium leading-relaxed placeholder:text-muted-foreground/40",
+            "custom-scrollbar relative z-10"
+          )}
+          autoFocus
+        />
+      </div>
     );
   }
 );
