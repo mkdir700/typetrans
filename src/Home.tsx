@@ -10,7 +10,7 @@ export default function Home() {
       {/* Glass container */}
       <div 
         className={cn(
-            "flex-1 flex rounded-xl overflow-hidden shadow-2xl transition-all duration-300",
+            "flex-1 flex rounded-xl overflow-hidden shadow-2xl",
             "bg-background/80 backdrop-blur-xl border border-border"
         )}
       >
