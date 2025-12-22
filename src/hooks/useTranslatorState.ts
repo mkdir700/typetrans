@@ -106,6 +106,12 @@ export const useTranslatorState = () => {
         setTranslatedText("");
     };
 
+    const clearContent = useCallback(() => {
+        setInputText("");
+        setTranslatedText("");
+        setIsTranslating(false);
+    }, []);
+
     return {
         inputText,
         setInputText,
@@ -121,5 +127,6 @@ export const useTranslatorState = () => {
         activeEngine,
         updateSettings,
         toggleLanguages,
+        clearContent,
     };
 };

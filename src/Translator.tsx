@@ -24,6 +24,7 @@ function Translator() {
     activeEngine,
     updateSettings,
     toggleLanguages,
+    clearContent,
   } = useTranslatorState();
 
   const {
@@ -38,6 +39,7 @@ function Translator() {
     inputText,
     translatedText,
     inputRef,
+    clearContent,
   });
 
   return (

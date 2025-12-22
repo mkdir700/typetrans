@@ -7,6 +7,7 @@ interface UseWindowShortcutsProps {
     inputText: string;
     translatedText: string;
     inputRef: React.RefObject<HTMLTextAreaElement>;
+    clearContent: () => void;
 }
 
 export const useWindowShortcuts = ({
@@ -14,6 +15,7 @@ export const useWindowShortcuts = ({
     inputText,
     translatedText,
     inputRef,
+    clearContent,
 }: UseWindowShortcutsProps) => {
     // Global Shortcut Listener
     useEffect(() => {
@@ -37,12 +39,16 @@ export const useWindowShortcuts = ({
             if (e.altKey && e.key === "Enter") {
                 e.preventDefault();
                 const text = translatedText || inputText;
-                if (text) invoke("paste_translation", { text });
+                if (text) {
+                    invoke("paste_translation", { text });
+                    clearContent();
+                }
                 return;
             }
 
             if (e.key === "Escape") {
                 invoke("hide_translator_window");
+                clearContent();
             }
         };
 
