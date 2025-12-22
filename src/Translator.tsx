@@ -68,7 +68,7 @@ function Translator() {
         />
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col p-3 gap-2 overflow-hidden">
+        <div className="flex-1 flex flex-col p-3 gap-2 overflow-hidden min-h-0">
           <TranslatorInput
             ref={inputRef}
             inputText={inputText}

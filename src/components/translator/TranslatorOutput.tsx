@@ -26,18 +26,18 @@ export const TranslatorOutput: React.FC<TranslatorOutputProps> = ({
   if (!isTranslating && !translatedText) return null;
 
   return (
-    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-      <Separator className="my-2 bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
+    <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-top-2 duration-300">
+      <Separator className="shrink-0 my-2 bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
       
-      <div className="relative">
+      <div className="relative flex-1 min-h-0">
         {/* Visual bar */}
         <div className={cn(
             "absolute left-0 top-1 bottom-1 w-0.5 rounded-full transition-all",
             isTranslating ? "bg-primary animate-pulse" : "bg-primary/50"
         )} />
 
-        <ScrollArea className="h-full w-full pl-3 pr-1 max-h-[200px]">
-          <div className="text-sm font-medium leading-relaxed text-foreground whitespace-pre-wrap py-1">
+        <ScrollArea className="h-full w-full pl-3 pr-1">
+          <div className="text-sm font-medium leading-relaxed text-foreground whitespace-pre-wrap py-1 pr-3 pb-8">
             {isTranslating && !translatedText ? (
               <ThinkingIndicator />
             ) : (
