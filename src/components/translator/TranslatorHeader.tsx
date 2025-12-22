@@ -55,14 +55,14 @@ export const TranslatorHeader: React.FC<TranslatorHeaderProps> = ({
 
   return (
     <div 
-      className="flex items-center justify-between px-3 py-2 bg-white/50 dark:bg-slate-800/50 border-b border-black/5 dark:border-white/5 select-none cursor-grab active:cursor-grabbing"
+      className="flex items-center justify-between px-3 py-2 bg-muted/20 border-b border-border select-none cursor-grab active:cursor-grabbing"
       onMouseDown={handleDrag}
     >
       {/* Language Selector */}
       <div className="flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs font-semibold gap-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10">
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs font-semibold gap-1.5 rounded-lg hover:bg-accent">
               <span className="uppercase">{sourceLang.code}</span>
             </Button>
           </DropdownMenuTrigger>
@@ -83,7 +83,7 @@ export const TranslatorHeader: React.FC<TranslatorHeaderProps> = ({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-6 w-6 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+          className="h-6 w-6 rounded-full hover:bg-accent"
           onClick={toggleLanguages}
         >
           <ArrowRightLeft size={12} className="opacity-60" />
@@ -91,7 +91,7 @@ export const TranslatorHeader: React.FC<TranslatorHeaderProps> = ({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs font-semibold gap-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10">
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs font-semibold gap-1.5 rounded-lg hover:bg-accent">
               <span className="uppercase">{targetLang.code}</span>
             </Button>
           </DropdownMenuTrigger>
@@ -143,7 +143,7 @@ export const TranslatorHeader: React.FC<TranslatorHeaderProps> = ({
                 size="icon" 
                 className={cn(
                   "h-7 w-7 transition-all duration-300", 
-                  isPinned ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10"
+                  isPinned ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-muted-foreground hover:bg-accent"
                 )}
                 onClick={handleTogglePin}
               >
@@ -157,7 +157,7 @@ export const TranslatorHeader: React.FC<TranslatorHeaderProps> = ({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-7 w-7 text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10"
+          className="h-7 w-7 text-muted-foreground hover:bg-accent"
           onClick={openSettings}
         >
           <Settings size={13} />

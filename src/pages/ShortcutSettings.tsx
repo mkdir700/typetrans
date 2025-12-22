@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { cn } from "../lib/utils";
 import { Keyboard, Save } from "lucide-react";
 import {
   Card,
@@ -56,18 +57,18 @@ export default function ShortcutSettings() {
         {/* Header */}
         <div>
           <div className="flex items-center space-x-3 mb-3">
-            <Keyboard className="text-blue-500" size={32} strokeWidth={2} />
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+            <Keyboard className="text-primary" size={32} strokeWidth={2} />
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
               {t("shortcutSettings.title")}
             </h1>
           </div>
-          <p className="text-lg text-slate-600 dark:text-slate-300">
+          <p className="text-lg text-muted-foreground">
             {t("shortcutSettings.description")}
           </p>
         </div>
 
         {/* Settings Card */}
-        <Card className="border-white/20 dark:border-slate-700/30 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm">
+        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
            <CardHeader>
                <CardTitle>{t("shortcutSettings.currentShortcut")}</CardTitle>
                 <CardDescription>
@@ -79,27 +80,28 @@ export default function ShortcutSettings() {
                 onClick={handleStartRecording}
                 onKeyDown={handleKeyDown}
                 tabIndex={0}
-                className={`w-full h-24 px-6 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all outline-none ${
-                isRecording
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-4 ring-blue-500/20"
-                    : "border-slate-200/70 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/40 hover:border-blue-400 dark:hover:border-blue-500"
-                }`}
+                className={cn(
+                    "w-full h-24 px-6 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all outline-none",
+                    isRecording
+                    ? "border-primary bg-primary/5 ring-4 ring-primary/20"
+                    : "border-border bg-card/50 hover:border-primary/50"
+                )}
             >
                 {shortcut ? (
                 <div className="flex items-center space-x-2">
                     {shortcut.split("+").map((key, index) => (
                     <span key={index}>
-                        <kbd className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-base font-bold shadow-sm text-slate-800 dark:text-slate-100">
+                        <kbd className="px-3 py-2 rounded-lg bg-muted border border-border text-base font-bold shadow-sm text-foreground">
                         {key}
                         </kbd>
                         {index < shortcut.split("+").length - 1 && (
-                        <span className="text-slate-400 mx-1">+</span>
+                        <span className="text-muted-foreground mx-1">+</span>
                         )}
                     </span>
                     ))}
                 </div>
                 ) : (
-                <span className="text-slate-400 dark:text-slate-500 text-sm">
+                <span className="text-muted-foreground text-sm">
                     {t("shortcutSettings.placeholder")}
                 </span>
                 )}
@@ -107,7 +109,7 @@ export default function ShortcutSettings() {
 
             <div className="flex justify-end gap-4">
                  {saved && (
-                    <div className="flex items-center px-3 text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center px-3 text-green-600 dark:text-green-500">
                          ✓ {t("settings.status.saved")}
                     </div>
                  )}
@@ -124,11 +126,11 @@ export default function ShortcutSettings() {
         </Card>
 
         {/* Info Section */}
-        <div className="bg-blue-50/50 dark:bg-blue-900/10 backdrop-blur-sm rounded-xl p-6 border border-blue-200/30 dark:border-blue-700/20">
-          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+        <div className="bg-primary/5 backdrop-blur-sm rounded-xl p-6 border border-primary/10">
+          <h3 className="text-sm font-semibold text-primary mb-2">
             💡 Tips
           </h3>
-          <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+          <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Use modifier keys (Cmd, Ctrl, Alt, Shift) for better compatibility</li>
             <li>• Avoid system shortcuts to prevent conflicts</li>
             <li>• Press ESC to cancel recording</li>

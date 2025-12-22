@@ -10,8 +10,8 @@ export default function Home() {
       {/* Glass container */}
       <div 
         className={cn(
-            "flex-1 flex rounded-xl overflow-hidden shadow-2xl border border-white/20 dark:border-slate-700/50",
-            "bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl"
+            "flex-1 flex rounded-xl overflow-hidden shadow-2xl transition-all duration-300",
+            "bg-background/80 backdrop-blur-xl border border-border"
         )}
       >
         <Sidebar />

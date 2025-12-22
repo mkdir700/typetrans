@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { warn, debug, trace, info, error } from "@tauri-apps/plugin-log";
 import App from "./App";
 import "./i18n";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 // Forward console logs to Tauri log plugin
 function forwardConsole(
@@ -30,6 +31,8 @@ forwardConsole("error", error);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <TooltipProvider>
+      <App />
+    </TooltipProvider>
   </React.StrictMode>
 );

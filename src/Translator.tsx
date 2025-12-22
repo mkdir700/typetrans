@@ -49,7 +49,7 @@ function Translator() {
       <div 
         className={cn(
           "flex flex-col w-full h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-300",
-          "bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/20 dark:border-slate-700/50"
+          "glass-container"
         )}
       >
         <TranslatorHeader

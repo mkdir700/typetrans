@@ -27,18 +27,18 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-[220px] bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border-r border-white/20 dark:border-slate-700/30 flex flex-col pt-6 pb-4">
+    <aside className="w-[220px] bg-muted/20 border-r border-border flex flex-col pt-6 pb-4">
       {/* Header */}
       <div className="px-6 mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">
           TypeTrans
         </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1 font-medium">
             AI-Powered Translation
         </p>
       </div>
 
-      <Separator className="bg-slate-200/50 dark:bg-slate-700/50 mb-4 mx-4 w-auto" />
+      <Separator className="bg-border mb-4 mx-4 w-auto" />
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-1">
@@ -51,18 +51,18 @@ export default function Sidebar() {
               className={({ isActive }) =>
                  cn(
                      "block rounded-lg transition-all duration-200",
-                    isActive ? "shadow-md" : ""
+                    isActive ? "shadow-sm bg-accent" : ""
                  )
               }
             >
               {({ isActive }) => (
                 <Button
-                  variant={isActive ? "secondary" : "ghost"}
+                  variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-3 h-11 font-medium",
+                    "w-full justify-start gap-3 h-10 font-medium",
                     isActive 
-                        ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400" 
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                        ? "text-accent-foreground" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-transparent"
                   )}
                 >
                   <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
@@ -75,7 +75,7 @@ export default function Sidebar() {
       </nav>
       
        <div className="px-6 mt-auto">
-          <p className="text-[10px] text-center text-slate-400 dark:text-slate-600">
+          <p className="text-[10px] text-center text-muted-foreground/60">
              v0.1.0-beta
           </p>
        </div>

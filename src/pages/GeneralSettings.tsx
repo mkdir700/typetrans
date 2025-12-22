@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../hooks/useTheme";
+import { cn } from "../lib/utils";
 import { Monitor, Moon, Sun, Languages, Settings } from "lucide-react";
 import {
   Card,
@@ -33,15 +34,15 @@ export default function GeneralSettings() {
         {/* Header */}
         <div>
           <div className="flex items-center space-x-3 mb-3">
-             <Settings className="text-blue-500" size={32} strokeWidth={2} />
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+             <Settings className="text-primary" size={32} strokeWidth={2} />
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
               {t("general.title")}
             </h1>
           </div>
         </div>
 
         {/* Theme Settings */}
-        <Card className="border-white/20 dark:border-slate-700/30 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm">
+        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
               <Monitor size={20} />
@@ -55,33 +56,36 @@ export default function GeneralSettings() {
              <div className="grid grid-cols-3 gap-4">
                 <button
                   onClick={() => setTheme("light")}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                  className={cn(
+                    "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200",
                     theme === "light"
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-slate-600 dark:text-slate-400"
-                  }`}
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                  )}
                 >
                   <Sun className="mb-2" size={24} />
                   <span className="font-semibold">{t("general.theme.light")}</span>
                 </button>
                 <button
                   onClick={() => setTheme("dark")}
-                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                   className={cn(
+                    "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200",
                     theme === "dark"
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-slate-600 dark:text-slate-400"
-                  }`}
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                  )}
                 >
                   <Moon className="mb-2" size={24} />
                   <span className="font-semibold">{t("general.theme.dark")}</span>
                 </button>
                 <button
                   onClick={() => setTheme("system")}
-                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                   className={cn(
+                    "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200",
                     theme === "system"
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                      : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-slate-600 dark:text-slate-400"
-                  }`}
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                  )}
                 >
                   <Monitor className="mb-2" size={24} />
                   <span className="font-semibold">{t("general.theme.system")}</span>
@@ -91,7 +95,7 @@ export default function GeneralSettings() {
         </Card>
 
         {/* Language Settings */}
-        <Card className="border-white/20 dark:border-slate-700/30 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm">
+        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
               <Languages size={20} />

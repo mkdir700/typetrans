@@ -37,7 +37,7 @@ export const TranslatorOutput: React.FC<TranslatorOutputProps> = ({
         )} />
 
         <ScrollArea className="h-full w-full pl-3 pr-1 max-h-[200px]">
-          <div className="text-sm font-medium leading-relaxed text-primary/90 dark:text-blue-100 whitespace-pre-wrap py-1">
+          <div className="text-sm font-medium leading-relaxed text-foreground whitespace-pre-wrap py-1">
             {isTranslating && !translatedText ? (
               <ThinkingIndicator />
             ) : (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
+import { cn } from "../lib/utils";
 import { Check, Eye, EyeOff, KeyRound, Settings as SettingsIcon, Server, Globe } from "lucide-react";
 import {
     Card,
@@ -110,18 +111,18 @@ export default function ServiceSettings() {
         {/* Header */}
         <div>
           <div className="flex items-center space-x-3 mb-3">
-            <SettingsIcon className="text-blue-500" size={32} strokeWidth={2} />
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+            <SettingsIcon className="text-primary" size={32} strokeWidth={2} />
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
               {t("modelSettings.title")}
             </h1>
           </div>
-          <p className="text-lg text-slate-600 dark:text-slate-300">
+          <p className="text-lg text-muted-foreground">
             {t("modelSettings.description")}
           </p>
         </div>
 
         {/* Settings Card */}
-        <Card className="border-white/20 dark:border-slate-700/30 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm">
+        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
                 <Server size={20} strokeWidth={1.8} />
@@ -134,31 +135,33 @@ export default function ServiceSettings() {
             <div className="grid grid-cols-2 gap-4">
                 <button
                     onClick={() => setActiveEngine("zhipu")}
-                    className={`flex items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                    className={cn(
+                        "flex items-center justify-center p-4 rounded-xl border-2 transition-all duration-200",
                         activeEngine === "zhipu"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                        : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-slate-600 dark:text-slate-400"
-                    }`}
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                    )}
                 >
                     <span className="font-semibold">{t("settings.engine.zhipu")}</span>
                 </button>
                 <button
                     onClick={() => setActiveEngine("tencent")}
-                    className={`flex items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                    className={cn(
+                        "flex items-center justify-center p-4 rounded-xl border-2 transition-all duration-200",
                         activeEngine === "tencent"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                        : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 text-slate-600 dark:text-slate-400"
-                    }`}
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                    )}
                 >
                     <span className="font-semibold">{t("settings.engine.tencent")}</span>
                 </button>
             </div>
 
-            <Separator className="bg-slate-200 dark:bg-slate-700/50" />
+            <Separator className="bg-border" />
 
             {/* Configuration Fields */}
             <div>
-                <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100 mb-6">
+                <div className="flex items-center gap-2 text-foreground mb-6">
                     <KeyRound size={20} strokeWidth={1.8} />
                     <h2 className="text-xl font-semibold">{t("settings.title")}</h2>
                 </div>
@@ -172,7 +175,7 @@ export default function ServiceSettings() {
                             onChange={(e) => setZhipuKey(e.target.value)}
                             type={showKey ? "text" : "password"}
                             placeholder={t("settings.apiKey.placeholder")}
-                            className="flex-1 bg-white/80 dark:bg-slate-900/40"
+                            className="flex-1"
                             spellCheck={false}
                             disabled={loading}
                             />
@@ -184,7 +187,7 @@ export default function ServiceSettings() {
                                 {showKey ? <EyeOff size={18} /> : <Eye size={18} />}
                             </Button>
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                             {t("settings.apiKey.note")}
                         </p>
                     </div>
@@ -200,7 +203,6 @@ export default function ServiceSettings() {
                                 onChange={(e) => setTencentId(e.target.value)}
                                 type="text"
                                 placeholder={t("settings.tencent.placeholderId")}
-                                className="bg-white/80 dark:bg-slate-900/40"
                                 spellCheck={false}
                                 disabled={loading}
                             />
@@ -215,7 +217,7 @@ export default function ServiceSettings() {
                                     onChange={(e) => setTencentKey(e.target.value)}
                                     type={showTencentKey ? "text" : "password"}
                                     placeholder={t("settings.tencent.placeholderKey")}
-                                    className="flex-1 bg-white/80 dark:bg-slate-900/40"
+                                    className="flex-1"
                                     spellCheck={false}
                                     disabled={loading}
                                 />
@@ -233,7 +235,7 @@ export default function ServiceSettings() {
                         <div className="space-y-2">
                             <Label className="flex items-center gap-2">
                                 {t("settings.tencent.region")}
-                                <Globe size={14} className="text-slate-400"/>
+                                <Globe size={14} className="text-muted-foreground"/>
                             </Label>
                            
                             <Input
@@ -241,35 +243,34 @@ export default function ServiceSettings() {
                                 onChange={(e) => setTencentRegion(e.target.value)}
                                 type="text"
                                 placeholder="e.g. ap-guangzhou"
-                                className="bg-white/80 dark:bg-slate-900/40"
                                 spellCheck={false}
                                 disabled={loading}
                             />
                         </div>
                         
-                        <p className="text-xs text-slate-500 dark:text-slate-400 pt-2">
+                        <p className="text-xs text-muted-foreground pt-2">
                             {t("settings.tencent.note")}
                         </p>
                     </div>
                 )}
             </div>
 
-            <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/30">
+            <div className="flex items-center justify-between gap-4 pt-4 border-t border-border">
                 <div className="min-h-[24px] text-sm">
                 {loading ? (
-                    <span className="text-slate-400 dark:text-slate-500">
+                    <span className="text-muted-foreground">
                     {t("settings.status.loading")}
                     </span>
                 ) : error ? (
-                    <span className="text-rose-600 dark:text-rose-400">
+                    <span className="text-destructive">
                     {error}
                     </span>
                 ) : saved ? (
-                    <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1.5 text-green-600 dark:text-green-500">
                     <Check size={16} /> {t("settings.status.saved")}
                     </span>
                 ) : (
-                    <span className="text-slate-400 dark:text-slate-500">
+                    <span className="text-muted-foreground">
                     &nbsp;
                     </span>
                 )}
@@ -278,7 +279,7 @@ export default function ServiceSettings() {
                 <Button
                     onClick={handleSave}
                     disabled={!canSave}
-                    className={canSave ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+                    className={!canSave ? "bg-muted text-muted-foreground" : ""}
                 >
                      {saving ? t("settings.saving") : t("settings.save")}
                 </Button>
