@@ -17,7 +17,7 @@ export default function Home() {
         <Sidebar />
         
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto no-scrollbar relative">
+        <main className="flex-1 overflow-y-auto scrollbar-none relative">
           <Outlet />
         </main>
       </div>

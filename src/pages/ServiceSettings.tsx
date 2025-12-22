@@ -266,7 +266,7 @@ export default function ServiceSettings() {
                     {error}
                     </span>
                 ) : saved ? (
-                    <span className="inline-flex items-center gap-1.5 text-green-600 dark:text-green-500">
+                    <span className="inline-flex items-center gap-1.5 text-success">
                     <Check size={16} /> {t("settings.status.saved")}
                     </span>
                 ) : (

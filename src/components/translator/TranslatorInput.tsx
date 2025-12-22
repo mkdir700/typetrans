@@ -59,7 +59,7 @@ export const TranslatorInput = forwardRef<HTMLTextAreaElement, TranslatorInputPr
           className={cn(
             "min-h-[40px] w-full resize-none border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-1 bg-transparent",
             "text-lg font-medium leading-relaxed placeholder:text-muted-foreground/40",
-            "custom-scrollbar relative z-10"
+            "relative z-10"
           )}
           autoFocus
         />
