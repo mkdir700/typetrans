@@ -2,12 +2,19 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import Translator from "./Translator";
-import SettingsPage from "./SettingsPage";
+import SettingsPage from "./SettingsPage"; // Keep for backward compatibility if needed, or remove if unused
 import Home from "./Home";
-import About from "./pages/About";
-import ModelSettings from "./pages/ModelSettings";
+import GeneralSettings from "./pages/GeneralSettings";
+import ServiceSettings from "./pages/ServiceSettings";
 import ShortcutSettings from "./pages/ShortcutSettings";
+import { useTheme } from "./hooks/useTheme";
 import "./App.css";
+
+// Initialize theme
+function ThemeInitializer() {
+    useTheme();
+    return null;
+}
 
 function App() {
   const [windowLabel, setWindowLabel] = useState<string>("");
@@ -24,9 +31,16 @@ function App() {
   // Render different components based on window label
   if (windowLabel === "translator") {
     console.log("Rendering Translator component");
-    return <Translator />;
+    // Ensure theme is applied for translator window too if it uses the hook internally or we can wrap it
+    return (
+        <>
+            <ThemeInitializer />
+            <Translator />
+        </>
+    );
   }
 
+  // Legacy settings window if it still exists
   if (windowLabel === "settings") {
     console.log("Rendering Settings component");
     return <SettingsPage />;
@@ -40,18 +54,20 @@ function App() {
   // Main window - use React Router for navigation
   console.log("Rendering main window with routing");
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />}>
-          <Route index element={<Navigate to="/about" replace />} />
-          <Route path="about" element={<About />} />
-          <Route path="model-settings" element={<ModelSettings />} />
-          <Route path="shortcut-settings" element={<ShortcutSettings />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <>
+        <ThemeInitializer />
+        <BrowserRouter>
+        <Routes>
+            <Route path="/" element={<Home />}>
+            <Route index element={<Navigate to="/general" replace />} />
+            <Route path="general" element={<GeneralSettings />} />
+            <Route path="service-settings" element={<ServiceSettings />} />
+            <Route path="shortcut-settings" element={<ShortcutSettings />} />
+            </Route>
+        </Routes>
+        </BrowserRouter>
+    </>
   );
 }
 
 export default App;
-

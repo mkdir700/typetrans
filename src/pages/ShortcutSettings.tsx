@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Keyboard, Save } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 export default function ShortcutSettings() {
   const { t } = useTranslation();
@@ -42,13 +50,14 @@ export default function ShortcutSettings() {
   };
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="max-w-3xl mx-auto px-8 py-12">
+    <div className="h-full bg-transparent p-8">
+      <div className="max-w-3xl mx-auto space-y-8">
+        
         {/* Header */}
-        <div className="mb-8">
+        <div>
           <div className="flex items-center space-x-3 mb-3">
             <Keyboard className="text-blue-500" size={32} strokeWidth={2} />
-            <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
               {t("shortcutSettings.title")}
             </h1>
           </div>
@@ -58,71 +67,64 @@ export default function ShortcutSettings() {
         </div>
 
         {/* Settings Card */}
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-8 border border-white/50 dark:border-slate-700/30 shadow-xl">
-          <label className="text-sm text-slate-600 dark:text-slate-300 font-medium mb-3 block">
-            {t("shortcutSettings.currentShortcut")}
-          </label>
-
-          <div
-            onClick={handleStartRecording}
-            onKeyDown={handleKeyDown}
-            tabIndex={0}
-            className={`w-full h-24 px-6 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all ${
-              isRecording
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-4 ring-blue-500/20"
-                : "border-slate-200/70 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/40 hover:border-blue-400 dark:hover:border-blue-500"
-            }`}
-          >
-            {shortcut ? (
-              <div className="flex items-center space-x-2">
-                {shortcut.split("+").map((key, index) => (
-                  <span key={index}>
-                    <kbd className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-base font-bold shadow-sm text-slate-800 dark:text-slate-100">
-                      {key}
-                    </kbd>
-                    {index < shortcut.split("+").length - 1 && (
-                      <span className="text-slate-400 mx-1">+</span>
-                    )}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <span className="text-slate-400 dark:text-slate-500 text-sm">
-                {t("shortcutSettings.placeholder")}
-              </span>
-            )}
-          </div>
-
-          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-            Click the box above and press your desired key combination
-          </p>
-
-          <div className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-700/30 flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={!shortcut || isRecording}
-              className={`flex items-center space-x-2 h-12 px-6 rounded-xl text-sm font-semibold transition-all ${
-                shortcut && !isRecording
-                  ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200 dark:shadow-blue-900/30 hover:scale-105 active:scale-95"
-                  : "bg-slate-200/70 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 cursor-not-allowed"
-              }`}
+        <Card className="border-white/20 dark:border-slate-700/30 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md shadow-sm">
+           <CardHeader>
+               <CardTitle>{t("shortcutSettings.currentShortcut")}</CardTitle>
+                <CardDescription>
+                   Click the box below and press your desired key combination
+                </CardDescription>
+           </CardHeader>
+          <CardContent className="space-y-6">
+            <div
+                onClick={handleStartRecording}
+                onKeyDown={handleKeyDown}
+                tabIndex={0}
+                className={`w-full h-24 px-6 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all outline-none ${
+                isRecording
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-4 ring-blue-500/20"
+                    : "border-slate-200/70 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/40 hover:border-blue-400 dark:hover:border-blue-500"
+                }`}
             >
-              <Save size={16} />
-              <span>{t("shortcutSettings.save")}</span>
-            </button>
-          </div>
-
-          {saved && (
-            <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-xl">
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                ✓ {t("settings.status.saved")}
-              </p>
+                {shortcut ? (
+                <div className="flex items-center space-x-2">
+                    {shortcut.split("+").map((key, index) => (
+                    <span key={index}>
+                        <kbd className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-base font-bold shadow-sm text-slate-800 dark:text-slate-100">
+                        {key}
+                        </kbd>
+                        {index < shortcut.split("+").length - 1 && (
+                        <span className="text-slate-400 mx-1">+</span>
+                        )}
+                    </span>
+                    ))}
+                </div>
+                ) : (
+                <span className="text-slate-400 dark:text-slate-500 text-sm">
+                    {t("shortcutSettings.placeholder")}
+                </span>
+                )}
             </div>
-          )}
-        </div>
+
+            <div className="flex justify-end gap-4">
+                 {saved && (
+                    <div className="flex items-center px-3 text-emerald-600 dark:text-emerald-400">
+                         ✓ {t("settings.status.saved")}
+                    </div>
+                 )}
+                 <Button
+                    onClick={handleSave}
+                    disabled={!shortcut || isRecording}
+                    className="gap-2"
+                >
+                    <Save size={16} />
+                    <span>{t("shortcutSettings.save")}</span>
+                </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Info Section */}
-        <div className="mt-6 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-md rounded-xl p-6 border border-blue-200/50 dark:border-blue-700/30">
+        <div className="bg-blue-50/50 dark:bg-blue-900/10 backdrop-blur-sm rounded-xl p-6 border border-blue-200/30 dark:border-blue-700/20">
           <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
             💡 Tips
           </h3>

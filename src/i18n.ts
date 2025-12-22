@@ -91,8 +91,8 @@ i18n
                         },
                     },
                     navigation: {
-                        about: 'About',
-                        modelSettings: 'Model Settings',
+                        general: 'General',
+                        serviceSettings: 'Service Settings',
                         shortcutSettings: 'Shortcut Settings',
                     },
                     about: {
@@ -125,6 +125,16 @@ i18n
                         currentShortcut: 'Current Shortcut',
                         placeholder: 'Press keys to set shortcut...',
                         save: 'Save Shortcut',
+                    },
+                    general: {
+                        title: 'General Settings',
+                        language: 'Language',
+                        theme: {
+                            label: 'Theme',
+                            light: 'Light',
+                            dark: 'Dark',
+                            system: 'System',
+                        },
                     },
                 },
             },
@@ -207,42 +217,20 @@ i18n
                         },
                     },
                     navigation: {
-                        about: '关于',
-                        modelSettings: '模型设置',
+                        general: '通用设置',
+                        serviceSettings: '服务设置',
                         shortcutSettings: '快捷键设置',
                     },
-                    about: {
-                        title: '关于 TypeTrans',
-                        description: '一个轻量级的跨平台实时翻译桌面工具。',
-                        usage: {
-                            title: '使用方法',
-                            step1: '在任何应用中选中需要翻译的文本',
-                            step2: '按下全局快捷键 Alt + T',
-                            step3: '在悬浮窗口中查看翻译结果',
-                            step4: '点击复制按钮复制译文',
-                        },
-                        features: {
-                            title: '功能特性',
-                            globalShortcut: '全局快捷键支持',
-                            smartText: '智能选中文本获取',
-                            floatingWindow: '优雅的无边框悬浮窗口',
-                            multiLanguage: '支持中文、英文、日文等多种语言',
-                            realtime: '基于 AI 的实时翻译',
-                            quickCopy: '一键复制翻译结果',
+                    general: {
+                        title: '通用设置',
+                        language: '语言',
+                        theme: {
+                            label: '主题',
+                            light: '浅色',
+                            dark: '深色',
+                            system: '系统',
                         },
                     },
-                    modelSettings: {
-                        title: '翻译设置',
-                        description: '配置翻译引擎和 API 设置。',
-                    },
-                    shortcutSettings: {
-                        title: '快捷键设置',
-                        description: '自定义全局键盘快捷键以快速启动翻译。',
-                        currentShortcut: '当前快捷键',
-                        placeholder: '按下按键设置快捷键...',
-                        save: '保存快捷键',
-                    },
-
                 },
             },
         },

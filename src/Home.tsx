@@ -1,18 +1,23 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import { cn } from "./lib/utils";
 
 export default function Home() {
   return (
     <div
-      className="h-screen w-screen overflow-hidden flex font-['Inter','Noto_Sans_SC',sans-serif] select-none rounded-2xl"
-      style={{ background: "transparent" }}
+      className="h-screen w-screen overflow-hidden flex font-['Inter','Noto_Sans_SC',sans-serif] select-none p-2 bg-transparent"
     >
       {/* Glass container */}
-      <div className="flex-1 flex glass-container rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden">
+      <div 
+        className={cn(
+            "flex-1 flex rounded-xl overflow-hidden shadow-2xl border border-white/20 dark:border-slate-700/50",
+            "bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl"
+        )}
+      >
         <Sidebar />
         
         {/* Main content area */}
-        <main className="flex-1 overflow-auto custom-scrollbar">
+        <main className="flex-1 overflow-y-auto no-scrollbar relative">
           <Outlet />
         </main>
       </div>
