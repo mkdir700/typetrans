@@ -94,6 +94,7 @@ i18n
                         general: 'General',
                         serviceSettings: 'Service Settings',
                         shortcutSettings: 'Shortcut Settings',
+                        about: 'About',
                     },
                     about: {
                         title: 'About TypeTrans',
@@ -113,6 +114,22 @@ i18n
                             multiLanguage: 'Support for Chinese, English, Japanese, and more',
                             realtime: 'Real-time AI-powered translation',
                             quickCopy: 'One-click copy translation results',
+                        },
+                        version: {
+                            title: 'Version Information',
+                            description: 'Current installed version and update status',
+                            current: 'Current Version',
+                        },
+                        checking: 'Checking for updates...',
+                        available: 'Update available: v{{version}}',
+                        uptodate: 'You are on the latest version.',
+                        error: 'Failed to check for updates.',
+                        checkButton: 'Check for Updates',
+                        updateDialog: {
+                            title: 'Update Available',
+                            message: 'Update to {{version}} is available!\n\nRelease notes: {{notes}}',
+                            update: 'Update',
+                            cancel: 'Cancel',
                         },
                     },
                     modelSettings: {
@@ -220,6 +237,25 @@ i18n
                         general: '通用设置',
                         serviceSettings: '服务设置',
                         shortcutSettings: '快捷键设置',
+                        about: '关于',
+                    },
+                    about: {
+                        version: {
+                            title: '版本信息',
+                            description: '当前安装版本及更新状态',
+                            current: '当前版本',
+                        },
+                        checking: '正在检查更新...',
+                        available: '发现新版本: v{{version}}',
+                        uptodate: '当前已是最新版本',
+                        error: '检查更新失败',
+                        checkButton: '检查更新',
+                        updateDialog: {
+                            title: '发现新版本',
+                            message: '新版本 v{{version}} 已发布！\n\n更新内容:\n{{notes}}',
+                            update: '立即更新',
+                            cancel: '取消',
+                        },
                     },
                     general: {
                         title: '通用设置',

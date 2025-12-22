@@ -7,6 +7,7 @@ import Home from "./Home";
 import GeneralSettings from "./pages/GeneralSettings";
 import ServiceSettings from "./pages/ServiceSettings";
 import ShortcutSettings from "./pages/ShortcutSettings";
+import About from "./pages/About";
 import { useTheme } from "./hooks/useTheme";
 import "./App.css";
 
@@ -63,6 +64,7 @@ function App() {
             <Route path="general" element={<GeneralSettings />} />
             <Route path="service-settings" element={<ServiceSettings />} />
             <Route path="shortcut-settings" element={<ShortcutSettings />} />
+            <Route path="about" element={<About />} />
             </Route>
         </Routes>
         </BrowserRouter>

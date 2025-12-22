@@ -36,6 +36,7 @@ hex = "0.4.3"
 chrono = "0.4.42"
 enigo = "0.6.1"
 mouse_position = "0.1.4"
+tauri-plugin-updater = "2.9.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.26.1"

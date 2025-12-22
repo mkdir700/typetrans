@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "typetrans",
+  "productName": "TypeTrans",
   "version": "0.1.0",
   "identifier": "com.typetrans.app",
   "build": {
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "typetrans",
+        "title": "TypeTrans",
         "width": 800,
         "height": 600,
         "visible": false
@@ -70,5 +70,12 @@
       "entitlements": "Entitlements.plist"
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/mkdir700/typetrans/releases/latest/download/latest.json"
+      ],
+      "pubkey": "YOUR_PUBLIC_KEY_HERE"
+    }
+  }
 }

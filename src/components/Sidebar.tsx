@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Settings, Keyboard, Server } from "lucide-react";
+import { Settings, Keyboard, Server, Info } from "lucide-react";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { cn } from "../lib/utils";
@@ -23,6 +23,11 @@ export default function Sidebar() {
       to: "/shortcut-settings",
       icon: Keyboard,
       label: t("navigation.shortcutSettings"),
+    },
+    {
+      to: "/about",
+      icon: Info,
+      label: t("navigation.about"),
     },
   ];
 
