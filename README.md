@@ -4,12 +4,13 @@
 
 ![TypeTrans Logo](public/tauri.svg)
 
-**一个轻量级的跨平台实时翻译桌面工具**
+**一个轻量级的边写边译工具**
 
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-blue.svg)](https://tauri.app/)
 [![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://www.rust-lang.org/)
+[![Shadcn UI](https://img.shields.io/badge/UI-Shadcn-000000.svg)](https://ui.shadcn.com/)
 
 [功能特性](#-功能特性) • [快速开始](#-快速开始) • [使用方法](#-使用方法) • [技术栈](#-技术栈) • [开发指南](#-开发指南)
 
@@ -19,35 +20,33 @@
 
 ## 📖 项目简介
 
-TypeTrans 是一个基于 Tauri v2、React 和 TypeScript 构建的跨平台桌面翻译工具。它能够让你在任何应用程序中快速翻译选中的文本，无需在翻译软件和工作窗口之间频繁切换，提供无缝、沉浸式的翻译体验。
+TypeTrans 是一个基于 Tauri v2 构建的现代化「边写边译」工具。**无需切换窗口，在任意输入框通过快捷键唤起，输入母语即时翻译并自动上屏。**
 
 ### 核心工作流程
 
-1. 📝 在任何应用中选中文本
-2. ⌨️ 按下全局快捷键 `Alt + T`
-3. 🪟 自动弹出悬浮翻译窗口
-4. 🌐 实时显示翻译结果
-5. 📋 一键复制译文到剪贴板
+1. 光标聚焦在任意应用的输入框 (如 Slack, WeChat, VS Code)
+2. 按下全局快捷键 (默认 `Alt + T`)
+3. 唤起悬浮翻译窗口，输入你想说的话
+4. 实时显示 AI 翻译结果
+5. 按下回车键，自动将译文粘贴到原输入框
 
 ## ✨ 功能特性
 
-- 🚀 **全局快捷键** - 在任何应用中快速触发翻译
-- 🎯 **智能文本获取** - 自动获取选中文本
-- 🪟 **悬浮窗口** - 无边框、透明、置顶的优雅界面
-- 🌍 **多语言支持** - 支持中文、英文、日文等多种语言
-- ⚡ **实时翻译** - 基于 智谱 AI (GLM-4.6) 的高质量翻译
-- 📋 **快速复制** - 一键复制翻译结果
-- 🎨 **现代化 UI** - 简洁美观的用户界面
-- 🔒 **轻量安全** - 基于 Rust 的高性能后端
+- **边写边译** - 专为写作场景设计，解决"提笔忘词"或"外语写作困难"
+- **全局唤起** - 在任何输入状态下快速触发，无缝衔接写作流
+- **一键粘贴** - 翻译完成后自动粘贴到原应用程序，无需手动复制粘贴
+- **现代化 UI** - 基于 Shadcn UI 的磨砂玻璃界面，支持 **深色模式** 和 **系统主题** 跟随
+- **多引擎支持** - 支持 **智谱 AI** 和 **腾讯云翻译**
+- **多语气翻译** - 支持 正式 / 随意 / 学术 / 创意 等多种翻译语气
 
 ## 🚀 快速开始
 
 ### 前置要求
 
-- [Node.js](https://nodejs.org/) 18+ 或 [Bun](https://bun.sh/)
+- [Node.js](https://nodejs.org/) 18+ 或 [Bun](https://bun.sh/) (推荐)
 - [Rust](https://www.rust-lang.org/) 1.70+
-- [智谱 AI API Key](https://open.bigmodel.cn/) (用于调用 GLM-4.6)
-- **macOS 用户**: 需要授予辅助功能权限(应用会自动引导)
+- 翻译服务 API Key (智谱 AI 或 腾讯云)
+- **macOS 用户**: 需要授予辅助功能权限 (首次运行会自动引导，用于模拟键盘输入)
 
 ### 安装步骤
 
@@ -68,8 +67,10 @@ npm install
 
 3. **配置 API Key**
 
-- 打开翻译窗口右上角的设置按钮，填写并保存「智谱 AI API Key」
-- （可选）开发环境也可以使用环境变量 `ZHIPU_API_KEY`
+   - 运行项目后，点击设置图标进入「服务设置」
+   - 选择翻译引擎 (智谱 AI 或 腾讯云)
+   - 填写对应的 API Key / Secret ID
+   - 点击保存即可生效
 
 4. **运行开发环境**
 
@@ -79,7 +80,7 @@ bun run tauri dev
 npm run tauri dev
 ```
 
-> 💡 **macOS 用户提示**: 首次运行时,应用会检查辅助功能权限。如果未授予,请点击应用中的"请求辅助功能权限"按钮,或查看 [macOS 权限配置指南](MACOS_PERMISSIONS.md)。
+> 💡 **macOS 用户提示**: 首次运行时, 应用会检查辅助功能权限。如果未授予, 请点击应用中的"请求辅助功能权限"按钮, 或在系统设置中手动开启。
 
 5. **构建生产版本**
 
@@ -91,37 +92,21 @@ npm run tauri build
 
 ## 📱 使用方法
 
-### 基本使用
+### 写作辅助
 
-1. 启动 TypeTrans 应用
-2. 在任意应用程序中选中需要翻译的文本
-3. 按下快捷键 `Alt + T`
-4. 在弹出的悬浮窗口中查看翻译结果
-5. 点击 "Copy Translation" 按钮复制译文
-6. 点击右上角 ✕ 关闭窗口
+1. 在聊天软件或编辑器中，确保光标在输入框内
+2. 按下快捷键 `Alt + T` (默认)
+3. 在弹出的 TypeTrans 窗口中输入你的**母语** (例如中文)
+4. 等待 AI 实时翻译为**目标语言** (例如英文)
+5. 按下 `Enter` 键，译文将自动粘贴到你原来的输入框中
 
-### 切换目标语言
+### 设置说明
 
-在翻译窗口顶部可以选择目标语言:
+点击窗口右上角的设置图标，可以进入设置页面：
 
-- 🇨🇳 中文 (ZH)
-- 🇬🇧 英文 (EN)
-- 🇯🇵 日文 (JA)
-
-### 自定义快捷键
-
-编辑 `src-tauri/src/lib.rs` 文件:
-
-```rust
-let shortcut = "Alt+T"; // 修改为你想要的快捷键
-```
-
-支持的快捷键格式:
-
-- `Alt+T`
-- `Ctrl+Shift+T`
-- `Cmd+T` (macOS)
-- `Super+T` (Linux)
+- **通用设置**: 切换语言、切换主题 (浅色/深色/系统)
+- **服务设置**: 配置翻译引擎 (智谱AI/腾讯云) 及 API Key
+- **快捷键设置**: 自定义全局唤醒快捷键
 
 ## 🛠 技术栈
 
@@ -130,203 +115,74 @@ let shortcut = "Alt+T"; // 修改为你想要的快捷键
 - **框架**: React 18
 - **语言**: TypeScript 5
 - **构建工具**: Vite
-- **UI**: 自定义 CSS (现代化设计)
+- **UI 库**: [Shadcn UI](https://ui.shadcn.com/)
+- **样式**: Tailwind CSS v4, Class Variance Authority (CVA)
+- **路由**: React Router v7
+- **状态管理/国际化**: i18next
 
 ### 后端
 
 - **框架**: Tauri 2.0
 - **语言**: Rust
-- **核心库**:
-  - `tauri-plugin-global-shortcut` - 全局快捷键支持
-  - `arboard` - 跨平台剪贴板操作
-  - `reqwest` - HTTP 客户端
-  - `enigo` - 键盘输入模拟
-  - `serde` - 序列化/反序列化
-
-### API 服务
-
-- **翻译服务**: 智谱 AI GLM-4.6
+- **核心插件**:
+  - `tauri-plugin-global-shortcut`: 全局快捷键
+  - `tauri-plugin-opener`: 文件/链接打开
+  - `tauri-plugin-macos-permissions`: macOS 权限请求
+  - `tauri-plugin-updater`: 自动更新
+  - `arboard`: 跨平台剪贴板管理
+  - `enigo`: 键盘模拟 (用于自动上屏)
+  - `reqwest`: HTTP 请求
 
 ## 📂 项目结构
 
 ```
 typetrans/
-├── src/                      # 前端源码
-│   ├── App.tsx              # 主应用组件
-│   ├── App.css              # 主应用样式
-│   ├── Translator.tsx       # 翻译窗口组件
-│   ├── Translator.css       # 翻译窗口样式
+├── src/
+│   ├── components/
+│   │   ├── ui/              # Shadcn UI 组件 (Button, Input, etc.)
+│   │   ├── effects/         # 视觉特效组件
+│   │   └── Sidebar.tsx      # 侧边栏导航
+│   ├── pages/
+│   │   ├── GeneralSettings.tsx  # 通用设置
+│   │   ├── ServiceSettings.tsx  # 服务商设置
+│   │   ├── ShortcutSettings.tsx # 快捷键设置
+│   │   └── About.tsx            # 关于页面
+│   ├── Translator.tsx       # 核心翻译窗口组件
+│   ├── App.tsx              # 主应用布局
+│   ├── i18n.ts              # 国际化配置
 │   └── main.tsx             # 入口文件
-├── src-tauri/               # Rust 后端
+├── src-tauri/
 │   ├── src/
-│   │   ├── main.rs         # 程序入口
-│   │   └── lib.rs          # 核心业务逻辑
-│   ├── Cargo.toml          # Rust 依赖配置
-│   └── tauri.conf.json     # Tauri 配置文件
+│   │   ├── main.rs          # Rust 入口
+│   │   └── lib.rs           # 核心业务逻辑
+│   ├── Cargo.toml           # Rust 依赖
+│   └── tauri.conf.json      # Tauri 配置
 ├── public/                  # 静态资源
-├── SETUP.md                 # 详细安装指南
-├── QUICKSTART.md            # 快速启动指南
-└── README.md                # 项目说明文档
+└── README.md                # 项目文档
 ```
-
-## 🔧 开发指南
-
-### 开发环境设置
-
-1. **安装推荐的 IDE 扩展**
-
-   - [VS Code](https://code.visualstudio.com/)
-   - [Tauri Extension](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
-   - [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
-
-2. **启动开发服务器**
-
-```bash
-bun run tauri dev
-```
-
-3. **热重载**
-   - 前端代码修改会自动热重载
-   - Rust 代码修改需要重新编译
-
-### 核心功能实现
-
-#### 全局快捷键监听
-
-使用 `tauri-plugin-global-shortcut` 注册全局快捷键:
-
-```rust
-app.global_shortcut()
-    .on_shortcut(shortcut, move |_app, _event, _shortcut| {
-        handle.emit("global-shortcut-triggered", ()).unwrap();
-    })
-    .unwrap();
-```
-
-#### 获取选中文本
-
-通过模拟 `Ctrl+C` 复制选中文本到剪贴板:
-
-```rust
-// Simulate Ctrl+C
-enigo.key(Key::Control, Direction::Press)?;
-enigo.key(Key::Unicode('c'), Direction::Click)?;
-enigo.key(Key::Control, Direction::Release)?;
-
-// Read from clipboard
-clipboard.get_text()?
-```
-
-#### 调用翻译 API
-
-使用 `reqwest` 调用智谱 AI Chat Completions API:
-
-```rust
-let res = client
-    .post("https://open.bigmodel.cn/api/paas/v4/chat/completions")
-    .header("Authorization", format!("Bearer {}", api_key))
-    .json(&payload)
-    .send()
-    .await?;
-```
-
-## ⚙️ 配置说明
-
-### 窗口配置
-
-在 `src-tauri/tauri.conf.json` 中配置窗口属性:
-
-```json
-{
-  "label": "translator",
-  "visible": false,
-  "decorations": false,
-  "transparent": true,
-  "alwaysOnTop": true,
-  "skipTaskbar": true,
-  "width": 400,
-  "height": 300
-}
-```
-
-### API 配置
-
-支持的翻译语言代码:
-
-- `ZH` - 中文
-- `EN` - 英文
-- `JA` - 日文
-> 💡 其他语言也可以直接传入目标语言代码/名称，模型会尽量按目标语言输出。
-
-## ❓ 常见问题
-
-### 快捷键不工作?
-
-- ✅ 检查是否与其他应用的快捷键冲突
-- ✅ 确认应用已获得必要的系统权限
-- ✅ 尝试重启应用
-
-### 无法获取选中文本?
-
-- ✅ **macOS**: 系统偏好设置 → 安全性与隐私 → 辅助功能 → 添加 TypeTrans
-- ✅ **Linux**: 某些发行版可能需要额外的权限配置
-- ✅ **Windows**: 通常无需额外配置,如有问题请以管理员身份运行
-
-### 翻译失败?
-
-- ✅ 检查设置页中是否已保存「智谱 AI API Key」（或环境变量 `ZHIPU_API_KEY`）
-- ✅ 检查网络连接是否正常
-- ✅ 确认智谱 AI 账号额度/配额未超限
-- ✅ 查看控制台错误日志
-
-### 如何更换翻译服务?
-
-目前支持智谱 AI GLM-4.6。如需接入其他翻译服务，需要修改 `src-tauri/src/lib.rs` 中的 `get_translation` 函数。
 
 ## 🗺️ 开发路线图
 
-- [ ] 支持更多翻译服务 (Google Translate, Azure Translator)
-- [ ] 添加翻译历史记录
-- [ ] 支持自定义快捷键 (通过 UI 配置)
-- [x] 添加设置界面
-- [ ] 支持更多语言
-- [ ] 添加发音功能
-- [ ] 支持批量翻译
-- [ ] 添加词典功能
+- [x] 基础翻译功能 (智谱 AI)
+- [x] 设置界面 (通用/服务/快捷键)
+- [x] 多主题支持 (浅色/深色)
+- [x] 自定义快捷键
+- [x] 支持腾讯云翻译 (TMT)
+- [ ] 更多翻译源支持 (DeepL, OpenAI)
+- [ ] 翻译历史记录
+- [ ] 离线词典功能
+- [ ] 语音朗读 (TTS)
 
 ## 🤝 贡献指南
 
-欢迎贡献代码、报告问题或提出建议!
+欢迎贡献代码! 请遵循以下步骤：
 
 1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
+2. 创建特性分支 (`git checkout -b feature/NewFeature`)
+3. 提交更改 (`git commit -m 'Add NewFeature'`)
+4. 推送到分支 (`git push origin feature/NewFeature`)
 5. 开启 Pull Request
 
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
-## 🙏 致谢
-
-- [Tauri](https://tauri.app/) - 强大的桌面应用框架
-- [React](https://reactjs.org/) - 优秀的前端框架
-- [Rust](https://www.rust-lang.org/) - 安全高效的系统编程语言
-
-## 📞 联系方式
-
-如有问题或建议,欢迎通过以下方式联系:
-
-- 提交 [Issue](https://github.com/mkdir700/typetrans/issues)
-- 发送邮件至: mkdir700@gmail.com
-
----
-
-<div align="center">
-
-**如果这个项目对你有帮助,请给它一个 ⭐️**
-
-Made with ❤️ by mkdir700
-
-</div>
