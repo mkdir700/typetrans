@@ -58,45 +58,47 @@ export default function About() {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">{t("about.title", "About TypeTrans")}</h2>
-        <p className="text-muted-foreground">
-          {t("about.description", "AI-Powered Translation Tool")}
-        </p>
-      </div>
+    <div className="h-full bg-transparent p-8">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{t("about.title", "About TypeTrans")}</h2>
+          <p className="text-muted-foreground">
+            {t("about.description", "AI-Powered Translation Tool")}
+          </p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("about.version.title", "Version Information")}</CardTitle>
-          <CardDescription>
-            {t("about.version.description", "Current installed version and update status")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{t("about.version.current", "Current Version")}</span>
-            <span className="text-sm text-muted-foreground">v{version}</span>
-          </div>
-          
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-muted-foreground">
-              {updateStatus}
+        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
+          <CardHeader>
+            <CardTitle>{t("about.version.title", "Version Information")}</CardTitle>
+            <CardDescription>
+              {t("about.version.description", "Current installed version and update status")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t("about.version.current", "Current Version")}</span>
+              <span className="text-sm text-muted-foreground">v{version}</span>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={checkForUpdates}
-              disabled={checking}
-            >
-              {checking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t("about.checkButton", "Check for Updates")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                {updateStatus}
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={checkForUpdates}
+                disabled={checking}
+              >
+                {checking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t("about.checkButton", "Check for Updates")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="text-xs text-center text-muted-foreground pt-8">
-        &copy; {new Date().getFullYear()} TypeTrans. All rights reserved.
+        <div className="text-xs text-center text-muted-foreground pt-8">
+          &copy; {new Date().getFullYear()} TypeTrans. All rights reserved.
+        </div>
       </div>
     </div>
   );
