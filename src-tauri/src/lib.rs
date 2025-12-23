@@ -727,6 +727,20 @@ async fn show_main_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn check_accessibility() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        #[link(name = "ApplicationServices", kind = "framework")]
+        extern "C" {
+            fn AXIsProcessTrusted() -> bool;
+        }
+        unsafe { AXIsProcessTrusted() }
+    }
+    #[cfg(not(target_os = "macos"))]
+    true
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -774,6 +788,15 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "Show Main Window", true, None::<&str>).unwrap();
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
             let menu = Menu::with_items(app, &[&show_i, &quit_i]).unwrap();
+
+            // Check Accessiblity Permissions on startup (macOS only)
+            #[cfg(target_os = "macos")]
+            {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.show().unwrap();
+                    window.set_focus().unwrap();
+                }
+            }
 
             let _tray = TrayIconBuilder::new()
                 .menu(&menu)
@@ -852,7 +875,9 @@ pub fn run() {
             show_settings_window,
             hide_settings_window,
             paste_translation,
-            show_main_window
+            show_main_window,
+            check_accessibility,
+
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -4,13 +4,15 @@
   "description": "Capability for all windows",
   "windows": [
     "main",
-    "translator"
+    "translator",
+    "accessibility"
   ],
   "permissions": [
     "core:default",
     "core:window:default",
     "core:window:allow-start-dragging",
     "opener:default",
-    "log:default"
+    "log:default",
+    "macos-permissions:default"
   ]
 }
