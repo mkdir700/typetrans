@@ -2,13 +2,6 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Keyboard, Command, CornerDownLeft, Settings, Pin, RotateCcw } from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import {
   Table,
   TableBody,
   TableCell,
@@ -20,6 +13,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 import { useShortcutStore, ShortcutAction } from "../store/shortcutStore";
+import { SettingsLayout } from "../components/SettingsLayout";
 
 interface ShortcutDef {
   id: ShortcutAction;
@@ -126,97 +120,89 @@ export default function ShortcutSettings() {
 
 
   return (
-    <div className="h-full bg-transparent p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex justify-between items-start">
-            <div>
-            <div className="flex items-center space-x-3 mb-3">
-                <Keyboard className="text-primary" size={32} strokeWidth={2} />
-                <h1 className="text-3xl font-bold text-foreground tracking-tight">
-                {t("shortcutSettings.title")}
-                </h1>
+    <SettingsLayout
+        title={t("shortcutSettings.title")}
+        description={t("shortcutSettings.description")}
+    >
+        <section>
+            <div className="flex justify-end mb-4">
+                <Button variant="outline" size="sm" onClick={resetToDefaults} className="gap-2 bg-background/50 backdrop-blur-sm">
+                    <RotateCcw className="h-4 w-4" />
+                    Reset Defaults
+                </Button>
             </div>
-            <p className="text-lg text-muted-foreground">
-                {t("shortcutSettings.description")}
+
+            <div className="rounded-md border border-border/50 bg-background/50 backdrop-blur-sm overflow-hidden">
+                <Table>
+                <TableHeader>
+                    <TableRow className="hover:bg-muted/50">
+                    <TableHead className="w-[200px]">Shortcut</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Scope</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {shortcutDefs.map((def) => {
+                        const isRowRecording = isRecording && recordingAction === def.id;
+                        const keys = shortcuts[def.id] ? shortcuts[def.id].split("+") : [];
+
+                        return (
+                            <TableRow key={def.id} className="hover:bg-muted/50">
+                                <TableCell className="font-medium">
+                                <div 
+                                    className={cn(
+                                        "flex items-center gap-1 p-2 rounded-md transition-all cursor-pointer border max-w-max",
+                                        isRowRecording 
+                                            ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
+                                            : "border-border/50 bg-background hover:bg-muted hover:border-border"
+                                    )}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        startRecording(def.id);
+                                    }}
+                                >
+                                    {isRowRecording ? (
+                                        <span className="text-primary text-sm font-medium animate-pulse px-2">Recording...</span>
+                                    ) : (
+                                        keys.length > 0 ? (
+                                            keys.map((key, kIndex) => (
+                                            <span key={kIndex} className="flex items-center">
+                                                <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-[12px] font-medium text-foreground opacity-100">
+                                                {key}
+                                                </kbd>
+                                                {kIndex < keys.length - 1 && (
+                                                <span className="mx-1 text-muted-foreground">+</span>
+                                                )}
+                                            </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-muted-foreground/50 text-sm italic px-2">Click to set</span>
+                                        )
+                                    )}
+                                </div>
+                                </TableCell>
+                                <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 rounded-full bg-muted/50 text-muted-foreground">
+                                        {def.icon}
+                                    </div>
+                                    <span className="text-base">{def.description}</span>
+                                </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                <Badge variant="secondary" className="bg-muted/50 hover:bg-muted">{def.scope}</Badge>
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+                </Table>
+            </div>
+            
+            <p className="text-sm text-muted-foreground mt-4 text-center">
+                Click on a key combination to record a new shortcut. Press <kbd className="bg-muted px-1 rounded text-xs border">Esc</kbd> to cancel recording.
             </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={resetToDefaults} className="gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Reset Defaults
-            </Button>
-        </div>
-
-        {/* Shortcuts List */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
-          <CardHeader>
-            <CardTitle>Keyboard Shortcuts</CardTitle>
-            <CardDescription>
-              Click on a shortcut to record a new key combination.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Shortcut</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Scope</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shortcutDefs.map((def) => {
-                    const isRowRecording = isRecording && recordingAction === def.id;
-                    const keys = shortcuts[def.id] ? shortcuts[def.id].split("+") : [];
-
-                    return (
-                        <TableRow key={def.id}>
-                            <TableCell>
-                            <div 
-                                className={cn(
-                                    "flex items-center gap-1 p-2 rounded-md transition-all cursor-pointer border",
-                                    isRowRecording 
-                                        ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
-                                        : "border-transparent hover:bg-muted hover:border-border"
-                                )}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    startRecording(def.id);
-                                }}
-                            >
-                                {isRowRecording ? (
-                                    <span className="text-primary text-sm font-medium animate-pulse">Recording...</span>
-                                ) : (
-                                    keys.map((key, kIndex) => (
-                                    <span key={kIndex} className="flex items-center">
-                                        <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-[12px] font-medium text-foreground opacity-100">
-                                        {key}
-                                        </kbd>
-                                        {kIndex < keys.length - 1 && (
-                                        <span className="mx-1 text-muted-foreground">+</span>
-                                        )}
-                                    </span>
-                                    ))
-                                )}
-                            </div>
-                            </TableCell>
-                            <TableCell>
-                            <div className="flex items-center gap-2">
-                                {def.icon}
-                                <span>{def.description}</span>
-                            </div>
-                            </TableCell>
-                            <TableCell>
-                            <Badge variant="secondary">{def.scope}</Badge>
-                            </TableCell>
-                        </TableRow>
-                    );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        </section>
+    </SettingsLayout>
   );
 }

@@ -4,9 +4,9 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { getVersion } from "@tauri-apps/api/app";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SettingsLayout } from "../components/SettingsLayout";
 
 export default function About() {
   const { t } = useTranslation();
@@ -58,48 +58,57 @@ export default function About() {
   };
 
   return (
-    <div className="h-full bg-transparent p-8">
-      <div className="max-w-3xl mx-auto space-y-8">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t("about.title", "About TypeTrans")}</h2>
-          <p className="text-muted-foreground">
-            {t("about.description", "AI-Powered Translation Tool")}
-          </p>
-        </div>
-
-        <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
-          <CardHeader>
-            <CardTitle>{t("about.version.title", "Version Information")}</CardTitle>
-            <CardDescription>
-              {t("about.version.description", "Current installed version and update status")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{t("about.version.current", "Current Version")}</span>
-              <span className="text-sm text-muted-foreground">v{version}</span>
+    <SettingsLayout
+        title={t("about.title", "About TypeTrans")}
+        description={t("about.description", "AI-Powered Translation Tool")}
+    >
+        <section className="flex flex-col gap-8">
+            <div className="flex items-center gap-4 bg-background/50 backdrop-blur-sm p-6 rounded-2xl border border-border/50">
+                <div className="h-16 w-16 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <Info size={32} />
+                </div>
+                <div>
+                     <h3 className="text-xl font-semibold mb-1">TypeTrans</h3>
+                     <p className="text-muted-foreground">
+                        Your intelligent translation assistant.
+                     </p>
+                </div>
             </div>
-            
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                {updateStatus}
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={checkForUpdates}
-                disabled={checking}
-              >
-                {checking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("about.checkButton", "Check for Updates")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
-        <div className="text-xs text-center text-muted-foreground pt-8">
-          &copy; {new Date().getFullYear()} TypeTrans. All rights reserved.
-        </div>
-      </div>
-    </div>
+            <div className="space-y-6">
+                <div className="flex flex-col gap-1">
+                     <h3 className="text-lg font-medium">Version Information</h3>
+                     <p className="text-sm text-muted-foreground">Current installed version and update status.</p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-transparent hover:border-border/50 transition-colors">
+                    <div className="flex flex-col">
+                        <span className="text-sm font-medium">Current Version</span>
+                        <span className="text-2xl font-bold tracking-tight">v{version}</span>
+                    </div>
+                    
+                     <Button 
+                        variant="outline" 
+                        onClick={checkForUpdates}
+                        disabled={checking}
+                        className="gap-2"
+                    >
+                        {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        {t("about.checkButton", "Check for Updates")}
+                    </Button>
+                </div>
+                
+                {updateStatus && (
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md animate-in fade-in">
+                        {updateStatus}
+                    </div>
+                )}
+            </div>
+
+            <div className="text-xs text-center text-muted-foreground pt-12">
+            &copy; {new Date().getFullYear()} TypeTrans. All rights reserved.
+            </div>
+        </section>
+    </SettingsLayout>
   );
 }
