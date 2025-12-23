@@ -741,6 +741,68 @@ fn check_accessibility() -> bool {
     true
 }
 
+#[tauri::command]
+async fn update_global_shortcut(
+    app: AppHandle,
+    old_shortcut: String,
+    new_shortcut: String,
+) -> Result<(), String> {
+    info!(
+        "[Global Shortcut] Updating from '{}' to '{}'",
+        old_shortcut, new_shortcut
+    );
+
+    if old_shortcut == new_shortcut {
+        return Ok(());
+    }
+
+    // Unregister old shortcut
+    if !old_shortcut.is_empty() {
+        if let Err(e) = app.global_shortcut().unregister(old_shortcut.as_str()) {
+            warn!(
+                "[Global Shortcut] Failed to unregister '{}': {}",
+                old_shortcut, e
+            );
+        } else {
+            info!("[Global Shortcut] Unregistered '{}'", old_shortcut);
+        }
+    }
+
+    // Register new shortcut
+    if !new_shortcut.is_empty() {
+        let handle = app.clone();
+        let shortcut_clone = new_shortcut.clone();
+
+        match app.global_shortcut().on_shortcut(
+            new_shortcut.as_str(),
+            move |_app, _event, _shortcut| {
+                info!("[Global Shortcut] '{}' triggered", shortcut_clone);
+                // Get translator window and emit event
+                if let Some(window) = handle.get_webview_window("translator") {
+                    if let Err(e) = window.emit("global-shortcut-triggered", ()) {
+                        error!("[Global Shortcut] Failed to emit event: {}", e);
+                    }
+                }
+            },
+        ) {
+            Ok(_) => {
+                if let Err(e) = app.global_shortcut().register(new_shortcut.as_str()) {
+                    return Err(format!("Failed to register '{}': {}", new_shortcut, e));
+                }
+                info!("[Global Shortcut] Registered '{}'", new_shortcut);
+            }
+            Err(e) => {
+                return Err(format!(
+                    "Failed to setup handler for '{}': {}",
+                    new_shortcut, e
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -877,6 +939,7 @@ pub fn run() {
             paste_translation,
             show_main_window,
             check_accessibility,
+            update_global_shortcut,
 
         ])
         .build(tauri::generate_context!())

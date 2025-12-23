@@ -11,6 +11,7 @@
     "core:default",
     "core:window:default",
     "core:window:allow-start-dragging",
+    "core:window:allow-hide",
     "opener:default",
     "log:default",
     "macos-permissions:default"

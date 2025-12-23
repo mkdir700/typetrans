@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { cn } from "../lib/utils";
-import { Keyboard, Save } from "lucide-react";
+import { Keyboard, Command, CornerDownLeft, Settings, Pin, RotateCcw } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,133 +8,214 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { cn } from "../lib/utils";
+import { useShortcutStore, ShortcutAction } from "../store/shortcutStore";
+
+interface ShortcutDef {
+  id: ShortcutAction;
+  description: string;
+  scope: string;
+  icon: React.ReactNode;
+}
 
 export default function ShortcutSettings() {
   const { t } = useTranslation();
-  const [shortcut, setShortcut] = useState("Alt+T");
-  const [isRecording, setIsRecording] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { 
+    shortcuts, 
+    updateShortcut, 
+    isRecording, 
+    recordingAction, 
+    startRecording, 
+    stopRecording, 
+    resetToDefaults 
+  } = useShortcutStore();
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    setShortcut("");
-  };
+  const shortcutDefs: ShortcutDef[] = [
+    {
+      id: "toggle_translator_window",
+      description: "Toggle Translator Window",
+      scope: "Global",
+      icon: <Keyboard className="h-4 w-4" />,
+    },
+    {
+      id: "paste_translation",
+      description: "Paste translation to previous app",
+      scope: "Translator",
+      icon: <CornerDownLeft className="h-4 w-4" />,
+    },
+    {
+      id: "pin_window",
+      description: "Pin/Unpin Translator Window",
+      scope: "Translator",
+      icon: <Pin className="h-4 w-4" />,
+    },
+    {
+      id: "open_settings",
+      description: "Open Settings",
+      scope: "Translator",
+      icon: <Settings className="h-4 w-4" />,
+    },
+    {
+      id: "hide_translator_window",
+      description: "Hide Translator Window",
+      scope: "Translator",
+      icon: <Command className="h-4 w-4" />,
+    },
+  ];
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isRecording) return;
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isRecording || !recordingAction) return;
 
-    e.preventDefault();
-    const keys: string[] = [];
+      e.preventDefault();
+      e.stopPropagation();
 
-    if (e.metaKey) keys.push("Cmd");
-    if (e.ctrlKey) keys.push("Ctrl");
-    if (e.altKey) keys.push("Alt");
-    if (e.shiftKey) keys.push("Shift");
+      const keys: string[] = [];
+      if (e.metaKey) keys.push("Cmd");
+      if (e.ctrlKey) keys.push("Ctrl");
+      if (e.altKey) keys.push("Alt");
+      if (e.shiftKey) keys.push("Shift");
 
-    if (e.key && !["Meta", "Control", "Alt", "Shift"].includes(e.key)) {
-      keys.push(e.key.toUpperCase());
+      if (e.key && !["Meta", "Control", "Alt", "Shift"].includes(e.key)) {
+        // Handle special keys
+        if (e.key === " ") keys.push("Space");
+        else if (e.key === "Escape") keys.push("Escape");
+        else if (e.key === "Enter") keys.push("Enter");
+        else keys.push(e.key.toUpperCase());
+      }
+
+      if (keys.length > 0) {
+        // Don't save if only modifiers are pressed
+        if (keys.every(k => ["Cmd", "Ctrl", "Alt", "Shift"].includes(k))) return;
+        
+        const shortcutString = keys.join("+");
+        updateShortcut(recordingAction, shortcutString);
+        stopRecording();
+      }
+    };
+
+    if (isRecording) {
+      window.addEventListener("keydown", handleKeyDown);
     }
 
-    if (keys.length > 1) {
-      setShortcut(keys.join("+"));
-      setIsRecording(false);
-    }
-  };
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRecording, recordingAction, updateShortcut, stopRecording]);
 
-  const handleSave = () => {
-    // TODO: Implement actual shortcut save logic via Tauri invoke
-    console.log("Saving shortcut:", shortcut);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  // Click outside to stop recording
+  useEffect(() => {
+     const handleClick = () => {
+         if (isRecording) stopRecording();
+     }
+     if (isRecording) {
+         window.addEventListener('click', handleClick);
+     }
+     return () => window.removeEventListener('click', handleClick);
+  }, [isRecording, stopRecording]);
+
 
   return (
     <div className="h-full bg-transparent p-8">
-      <div className="max-w-3xl mx-auto space-y-8">
-        
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div>
-          <div className="flex items-center space-x-3 mb-3">
-            <Keyboard className="text-primary" size={32} strokeWidth={2} />
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">
-              {t("shortcutSettings.title")}
-            </h1>
-          </div>
-          <p className="text-lg text-muted-foreground">
-            {t("shortcutSettings.description")}
-          </p>
+        <div className="flex justify-between items-start">
+            <div>
+            <div className="flex items-center space-x-3 mb-3">
+                <Keyboard className="text-primary" size={32} strokeWidth={2} />
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">
+                {t("shortcutSettings.title")}
+                </h1>
+            </div>
+            <p className="text-lg text-muted-foreground">
+                {t("shortcutSettings.description")}
+            </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={resetToDefaults} className="gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Reset Defaults
+            </Button>
         </div>
 
-        {/* Settings Card */}
+        {/* Shortcuts List */}
         <Card className="bg-card/50 backdrop-blur-sm border-border shadow-sm">
-           <CardHeader>
-               <CardTitle>{t("shortcutSettings.currentShortcut")}</CardTitle>
-                <CardDescription>
-                   Click the box below and press your desired key combination
-                </CardDescription>
-           </CardHeader>
-          <CardContent className="space-y-6">
-            <div
-                onClick={handleStartRecording}
-                onKeyDown={handleKeyDown}
-                tabIndex={0}
-                className={cn(
-                    "w-full h-24 px-6 rounded-xl border-2 flex items-center justify-center cursor-pointer transition-all outline-none",
-                    isRecording
-                    ? "border-primary bg-primary/5 ring-4 ring-primary/20"
-                    : "border-border bg-card/50 hover:border-primary/50"
-                )}
-            >
-                {shortcut ? (
-                <div className="flex items-center space-x-2">
-                    {shortcut.split("+").map((key, index) => (
-                    <span key={index}>
-                        <kbd className="px-3 py-2 rounded-lg bg-muted border border-border text-base font-bold shadow-sm text-foreground">
-                        {key}
-                        </kbd>
-                        {index < shortcut.split("+").length - 1 && (
-                        <span className="text-muted-foreground mx-1">+</span>
-                        )}
-                    </span>
-                    ))}
-                </div>
-                ) : (
-                <span className="text-muted-foreground text-sm">
-                    {t("shortcutSettings.placeholder")}
-                </span>
-                )}
-            </div>
+          <CardHeader>
+            <CardTitle>Keyboard Shortcuts</CardTitle>
+            <CardDescription>
+              Click on a shortcut to record a new key combination.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Shortcut</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Scope</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {shortcutDefs.map((def) => {
+                    const isRowRecording = isRecording && recordingAction === def.id;
+                    const keys = shortcuts[def.id] ? shortcuts[def.id].split("+") : [];
 
-            <div className="flex justify-end gap-4">
-                 {saved && (
-                    <div className="flex items-center px-3 text-green-600 dark:text-green-500">
-                         ✓ {t("settings.status.saved")}
-                    </div>
-                 )}
-                 <Button
-                    onClick={handleSave}
-                    disabled={!shortcut || isRecording}
-                    className="gap-2"
-                >
-                    <Save size={16} />
-                    <span>{t("shortcutSettings.save")}</span>
-                </Button>
-            </div>
+                    return (
+                        <TableRow key={def.id}>
+                            <TableCell>
+                            <div 
+                                className={cn(
+                                    "flex items-center gap-1 p-2 rounded-md transition-all cursor-pointer border",
+                                    isRowRecording 
+                                        ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
+                                        : "border-transparent hover:bg-muted hover:border-border"
+                                )}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    startRecording(def.id);
+                                }}
+                            >
+                                {isRowRecording ? (
+                                    <span className="text-primary text-sm font-medium animate-pulse">Recording...</span>
+                                ) : (
+                                    keys.map((key, kIndex) => (
+                                    <span key={kIndex} className="flex items-center">
+                                        <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-[12px] font-medium text-foreground opacity-100">
+                                        {key}
+                                        </kbd>
+                                        {kIndex < keys.length - 1 && (
+                                        <span className="mx-1 text-muted-foreground">+</span>
+                                        )}
+                                    </span>
+                                    ))
+                                )}
+                            </div>
+                            </TableCell>
+                            <TableCell>
+                            <div className="flex items-center gap-2">
+                                {def.icon}
+                                <span>{def.description}</span>
+                            </div>
+                            </TableCell>
+                            <TableCell>
+                            <Badge variant="secondary">{def.scope}</Badge>
+                            </TableCell>
+                        </TableRow>
+                    );
+                })}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
-
-        {/* Info Section */}
-        <div className="bg-primary/5 backdrop-blur-sm rounded-xl p-6 border border-primary/10">
-          <h3 className="text-sm font-semibold text-primary mb-2">
-            💡 Tips
-          </h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Use modifier keys (Cmd, Ctrl, Alt, Shift) for better compatibility</li>
-            <li>• Avoid system shortcuts to prevent conflicts</li>
-            <li>• Press ESC to cancel recording</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

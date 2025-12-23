@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useShortcutStore } from "../store/shortcutStore";
+import { matchShortcut } from "../lib/shortcutUtils";
 
 interface UseWindowShortcutsProps {
     updateSettings: () => Promise<void>;
@@ -8,6 +11,8 @@ interface UseWindowShortcutsProps {
     translatedText: string;
     inputRef: React.RefObject<HTMLTextAreaElement>;
     clearContent: () => void;
+    handleTogglePin: () => void;
+    openSettings: () => void;
 }
 
 export const useWindowShortcuts = ({
@@ -16,7 +21,11 @@ export const useWindowShortcuts = ({
     translatedText,
     inputRef,
     clearContent,
+    handleTogglePin,
+    openSettings,
 }: UseWindowShortcutsProps) => {
+    const { shortcuts } = useShortcutStore();
+
     // Global Shortcut Listener
     useEffect(() => {
         const unlisten = listen("global-shortcut-triggered", async () => {
@@ -36,7 +45,8 @@ export const useWindowShortcuts = ({
     // Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.altKey && e.key === "Enter") {
+            // Paste Translation
+            if (matchShortcut(e, shortcuts.paste_translation)) {
                 e.preventDefault();
                 const text = translatedText || inputText;
                 if (text) {
@@ -46,13 +56,31 @@ export const useWindowShortcuts = ({
                 return;
             }
 
-            if (e.key === "Escape") {
-                invoke("hide_translator_window");
+            // Pin Window
+            if (matchShortcut(e, shortcuts.pin_window)) {
+                e.preventDefault();
+                handleTogglePin();
+                return;
+            }
+
+            // Open Settings
+            if (matchShortcut(e, shortcuts.open_settings)) {
+                e.preventDefault();
+                openSettings();
+                return;
+            }
+
+            // Hide Window
+            if (matchShortcut(e, shortcuts.hide_translator_window || "Escape")) { // Default: Escape
+                e.preventDefault();
+                getCurrentWindow().hide().catch((error) => {
+                    console.error("Failed to hide window:", error);
+                });
                 clearContent();
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [translatedText, inputText]);
+        document.addEventListener("keydown", handleKeyDown, true);
+        return () => document.removeEventListener("keydown", handleKeyDown, true);
+    }, [translatedText, inputText, handleTogglePin, openSettings, clearContent, shortcuts]);
 };

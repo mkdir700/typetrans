@@ -40,6 +40,8 @@ function Translator() {
     translatedText,
     inputRef,
     clearContent,
+    handleTogglePin,
+    openSettings,
   });
 
   return (
